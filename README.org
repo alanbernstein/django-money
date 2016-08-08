@@ -1,0 +1,56 @@
+* workflow
+
+much of this is not done yet
+
+** steps to go from PDF statements -> auto tagged transactions
+1. pm download_statements   # TODO
+2. pm parse_pdf_statements  # includes the 'populate' step
+3. pm manage_transactions -a alan-chase-credit --clean-descrptions
+4. pm manage_transactions -a alan-chase-credit --auto-add-merchants
+   TODO: if no merchant match, but exact description match, AND previous transaction has tags, then create merchant
+
+
+** manually manage merchants and tags
+pm manage_transactions -a alan-chase-credit --assign-interactive  # follow the displayed help
+*** utility functions:
+- search(search_string) - show all transactions and merchants matching some pattern
+- add_merchant_pattern(merchant_id, pattern) - for when an existing merchant doesnt get all transactions
+- add_merchant(name, pattern, tag_list)
+- add_tx_tags(tids, tag_list)
+
+*** data cleaning
+pm fix_year_boundary_dates -a alan-chase-credit
+
+** reporting
+pm manage_merchants --describe
+pm manage_transactions --describe
+
+** set up new users/accounts/data
+pm initialize
+pm initialize -a alan-chase-credit --tags --filename <path>
+
+
+* code organization
+idea: if the function's core purpose is to manipulate:
+ transactions - put in transactions.py
+ merchants - put in merchants.py
+ statements - put in statements.py
+
+parsers go in parsers/*
+
+** apps
+*** accounts
+main responsibilities:
+- download account statement pdf/csv files
+- rename statement files
+- parse statement files to db
+- handle automatic and manual tagging of merchants/transactions
+
+*** bills
+- download bill statements
+- rename bill statements
+- parse bill statements
+actually, this sounds very repetitive - maybe just put this in accounts...
+
+*** budget
+looking forward...

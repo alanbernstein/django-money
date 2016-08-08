@@ -1,0 +1,11 @@
+<html>
+  <head>
+    <title>merchant detail</title>
+  </head>
+  <body>
+    <h2>{{merchant_name}}</h2>
+{{ merchant_summary }}
+{% load django_tables2 %}
+{% render_table table %}
+  </body>
+</html>
