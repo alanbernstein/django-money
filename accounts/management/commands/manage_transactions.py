@@ -3,6 +3,7 @@ import datetime
 from itertools import groupby
 from django.core.management.base import BaseCommand
 from django.db.models import Sum
+from taggit.models import Tag
 from accounts.models import Transaction, Merchant
 from accounts.base import get_account
 
@@ -29,12 +30,15 @@ class Command(BaseCommand):
             assign_merchants_auto(account)
 
 
+# pm manage_transactions -a alan-chase-credit --assign-interactive
 def help():
     print('--\nusage')
     print('  help()')
     print('  add_merchant(name, pattern, tags)')
     print('  add_merchant_pattern(merchant_id, pattern)')
     print('  add_tx_tags(transaction_id, tags)')
+    print('  get_tx(ids_or_strings)')
+    print('  get_tx_context(id)')
     print('  search(string)')
     print("  list_tx(account, 'recent')")
     print("  list_tx(account, 'recent-amount')")
@@ -71,8 +75,8 @@ def add_merchant_pattern(merchant_id, pattern):
     print('combined pattern - %s' % new_pattern)
 
 
-def add_transaction_tags(transaction_ids, tags, notes=None):
-    if not type(tags) == list:
+def add_transaction_tags(transaction_ids, tags=None, notes=None):
+    if tags and not type(tags) == list:
         tags = [tags]
 
     if not type(transaction_ids) == list:
@@ -80,7 +84,8 @@ def add_transaction_tags(transaction_ids, tags, notes=None):
 
     for tid in transaction_ids:
         tt = Transaction.objects.get(id=tid)
-        tt.tags.add(*tags)
+        if tags:
+            tt.tags.add(*tags)
         if notes:
             tt.notes = notes
         tt.save()
@@ -88,6 +93,27 @@ def add_transaction_tags(transaction_ids, tags, notes=None):
 
 add_tx_tags = add_transaction_tags
 
+
+def get_tx_context(tid, context=5):
+    tt = Transaction.objects.filter(id__in=range(tid-context, tid+context))
+    for t in tt:
+        print('%6d %s' % (t.id, t))
+
+
+def get_tx(qlist):
+    if type(qlist) != list:
+        qlist = [qlist]
+
+    tx = []
+    for query in qlist:
+        if type(query) == str:
+            pass
+        if type(query) == int:
+            tx.append(Transaction.objects.get(id=query))
+
+    if len(tx) == 1:
+        tx = tx[0]
+    return tx
 
 def search_merchants(s):
     res = Merchant.objects.filter(name__icontains=s)
@@ -104,7 +130,15 @@ def search_transactions(s):
         print('%d. %s (%s %s) - %s' % (t.id, t.description, t.transaction_date, t.debit_amount, mid))
 
 
+def search_tags(s):
+    res = Tag.objects.filter(name__icontains=s)
+    for t in res:
+        print('%d. %s' % (t.id, t.name))
+
+
 def search(s):
+    print('tags:')
+    search_tags(s)
     print('merchants:')
     search_merchants(s)
     print('transactions')
@@ -116,7 +150,8 @@ def list_transactions(account, mode='recent'):
     # recent_days = 3 * 30
     N = 20
     tx0 = Transaction.objects.filter(account_id=account.id, merchant=None, tags=None)
-    total = tx0.aggregate(Sum('debit_amount')).values()[0]
+    # total = tx0.aggregate(Sum('debit_amount')).values()[0]  # breaks in python3 
+    total = float(sum([t.debit_amount for t in tx0]))
     num_tx = len(tx0)
 
     # sort by amount
