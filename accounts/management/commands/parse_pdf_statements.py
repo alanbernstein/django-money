@@ -127,6 +127,9 @@ class ChaseCreditParser(PdfStatementParser):
                                                         debit_amount=dollars_float,
                                                         statement_id=self.statement.id,
                                                         description_raw=desc_str)
+            if new:
+                print('new transaction created')
+                debug()
 
         self.statement.parsed = True
         self.statement.save()
