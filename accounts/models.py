@@ -17,7 +17,7 @@ __all__ = ['User', 'Account', 'Merchant', 'Statement', 'Transaction']
 class User(models.Model):
     name = models.CharField(max_length=300)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -52,7 +52,7 @@ class Account(models.Model):
 
         super(Account, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s's %s" % (self.user.name, self.name)
 
 
@@ -78,8 +78,14 @@ class Merchant(models.Model):
         else:
             return format_html('<a href="/merchants/%s">%s</a>' % (self.id, self.name))
 
-    def __unicode__(self):
-        return self.name
+    def __str__(self):
+        m = self.name
+        tags = self.tags.all()
+        #debug()
+        if tags:
+            tagnames = [t.name for t in tags]
+            m = '%s (%s)' % (m, ', '.join(tagnames))
+        return m
 
 
 class Statement(models.Model):
@@ -103,11 +109,11 @@ class Statement(models.Model):
         else:
             return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.end_date))
 
-    def __unicode__(self):
+    def __self__(self):
         if self.end_date:
-            return '%s - %s' % (self.account.__unicode__(), self.end_date)
+            return '%s - %s' % (self.account.__str__(), self.end_date)
         else:
-            return '%s - unparsed' % self.account.__unicode__()
+            return '%s - unparsed' % self.account.__str__()
 
 
 class Transaction(models.Model):
@@ -150,7 +156,7 @@ class Transaction(models.Model):
         else:
             return format_html('<a href="/transactions/%s">%s</a>' % (self.id, self))
 
-    def __unicode__(self):
+    def __str__(self):
         if self.merchant:
             desc = self.merchant.name
         else:
