@@ -54,3 +54,44 @@ actually, this sounds very repetitive - maybe just put this in accounts...
 
 *** budget
 looking forward...
+
+
+* interface todo
+tables should be sortable
+
+
+| url                | current                                | plots | needs                                                           |
+|--------------------+----------------------------------------+-------+-----------------------------------------------------------------|
+| tags               | list of tags with count and total      |       | need to also tally merchant-tags; common shared tags            |
+| tags/<id>          | merchants, transactions                |       | transactions with merchant-tags, table format with more details |
+| transactions       | most recent transaction table          |       |                                                                 |
+| transactions/<id>  | transaction detail                     |       | same merchant, same tags tables                                 |
+| merchants          | list of merchants                      |       | move pattern column to far right                                |
+| merchants/<id>     | list of transactions                   |       | list of similar merchants (same tag list)                       |
+| merchants/untagged |                                        |       |                                                                 |
+| merchants/unnamed  | list of descr-groups without merchants |       |                                                                 |
+| timeseries         |                                        |       |                                                                 |
+| accounts           | -                                      |       |                                                                 |
+| accounts/<id>      | -                                      |       |                                                                 |
+| statements         | -                                      |       | list of statements with date, total, maybe common tags          |
+| statements/<id>    | -                                      |       | list of transactions from statement                             |
+
+
+* ingestion todo
+** tagging
+- trips
+- lodging
+- car
+- food
+
+- remove burger-challenge-2015 from merchant tag, add to transaction tags
+
+** consuming statements
+remove duplicate chase transactions
+re-parse statements and re-add missing transactions, without duplicating
+
+** other accounts
+in order:
+my debit
+lisa debit
+lisa credit
