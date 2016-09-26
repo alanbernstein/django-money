@@ -1,5 +1,6 @@
 appnope==0.1.0
 backports.shutil-get-terminal-size==1.0.0
+dateparser>=0.4.0
 decorator==4.0.10
 Django==1.8   # regex-field seems to have a problem with django 1.10
 django-extensions==1.6.7
