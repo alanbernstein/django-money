@@ -1,16 +1,29 @@
-from datetime import datetime
+import datetime
+from datetime import datetime as dt
+from dateutil.relativedelta import relativedelta
+from itertools import groupby
+from collections import defaultdict
+import logging
 
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.http import HttpResponse
 from django.core.urlresolvers import resolve
 from django.shortcuts import render
 from django.utils.html import format_html
-from django.db.models import Sum, Count
-
-from accounts.models import Account, Statement, Transaction, Merchant, User, TagTable, MerchantTable, TransactionTable
+from django.db.models import Sum, Count, Q
 from taggit.models import Tag
 
+from accounts.models import (Account,
+                             Statement,
+                             Transaction,
+                             Merchant,
+                             User,
+                             TagTable,
+                             MerchantTable,
+                             TransactionTable
+                             )
 
+from panda.debug import debug
 
 """
 TODO: view tag breakdown, but also view subtag breakdown
@@ -44,15 +57,11 @@ https://pypi.python.org/pypi/django-tags-input
 
 """
 
+logger = logging.getLogger(__name__)
+
 
 def index(request):
-    resp = ''
-    resp += '<a href="tags">tags</a><br>\n'
-    resp += '<a href="accounts">accounts</a><br>\n'
-    resp += '<a href="statements">statements</a><br>\n'
-    resp += '<a href="merchants">merchants</a> - <a href="merchants/untagged">untagged</a> - <a href="merchants/unnamed">unnamed</a><br>\n'
-    resp += '<a href="transactions">transactions</a> - <a href="transactions/untagged">untagged</a> - <a href="transactions/unnamed">unnamed</a><br>\n'
-    return HttpResponse(resp)
+    return render_to_response('index.html')
 
 
 def transaction_list_table(request):
@@ -61,8 +70,11 @@ def transaction_list_table(request):
     tx = all_tx[Nt - 30:Nt - 1]
 
     rows = get_transaction_info(tx)
+    print(rows[0])
     table = TransactionTable(rows)
-    return render(request, 'datatable-basic.html', {'table': table})
+    # return render(request, 'datatable-basic.html', {'table': table})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'transaction'})
 
 
 def get_merchant_info(merchants=None):
@@ -88,7 +100,9 @@ def get_merchant_info(merchants=None):
         row['tags'] = m.get_tags_as_links()
         row['total_transactions'] = m_tx.count()
         key = 'debit_amount'
-        row['total_amount'] = m_tx.aggregate(Sum(key))[key + '__sum']
+        total = m_tx.aggregate(Sum(key))[key + '__sum']
+        total = total or 0
+        row['total_amount'] = float(total)
         rows.append(row)
 
     return rows
@@ -158,7 +172,9 @@ def merchants_untagged(request, sort=False):
     merchants = Merchant.objects.filter(tags__isnull=True)
     rows = get_merchant_info(merchants)
     table = MerchantTable(rows)
-    return render(request, 'datatable-basic.html', {'table': table})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'merchant'})
+
 
 
 def transactions_untagged(request, sort=False):
@@ -166,14 +182,19 @@ def transactions_untagged(request, sort=False):
     # sorted_items = profile.ItemList.annotate(itemcount=Count('name'))
     # sorted_items = sorted_items.order_by('-itemcount')
 
-    tx = Transaction.objects.filter(tags__isnull=True)
+    tx = Transaction.objects.filter(tags__isnull=True, merchant__tags__isnull=True)
     rows = get_transaction_info(tx)
     rows2 = [row for row in rows if not row['tags']]  # TODO: why is this necessary
     table = TransactionTable(rows2)
-    return render(request, 'datatable-basic.html', {'table': table})
+    #return render(request, 'datatable-basic.html', {'table': table})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'transaction'})
+
 
 
 def merchants_unnamed(request, sort=True):
+    # TODO: try to use this to fix the header images
+    # http://django-datatable-view.appspot.com/specific-columns/
     tx = Transaction.objects.filter(merchant__isnull=True)
     key = 'description'
     if sort:
@@ -190,7 +211,8 @@ def merchants_unnamed(request, sort=True):
         rows = get_transaction_info(tx)
 
     table = MerchantTable(rows)
-    return render(request, 'datatable-basic.html', {'table': table})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'merchant'})
 
 
 def merchant_list_table(request):
@@ -198,7 +220,9 @@ def merchant_list_table(request):
     merchants = Merchant.objects.all()
     rows = get_merchant_info(merchants)
     table = MerchantTable(rows)
-    return render(request, 'datatable-basic.html', {'table': table})
+    print(rows[0])
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'merchant'})
 
 
 def merchant_list_simple(request):
@@ -290,12 +314,13 @@ def tag_list_table(request):
 
     rows = get_tag_info()
     table = TagTable(rows)
-    return render(request, 'datatable-basic.html', {'table': table})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'tag'})
 
 
 def get_tag_info():
     # return Tag.objects.all()
-
+    
     rows = []
     tags = Tag.objects.all()
 
@@ -321,6 +346,124 @@ def tag_list_simple(request):
 
 
 tag_list = tag_list_table
+
+
+def get_compare_data(merchants=None, tags=None, start=None, end=None):
+    """inputs:
+    merchants = [merchant_name1, ...]
+      OR 
+    tags = [tag_name1, ...]
+
+    start = 'YYYY-MM-DD'
+    end = 'YYYY-MM-DD'
+
+    """
+    # TODO: there might be a way to simplify the second half of this function
+    # to a single django query.
+    # it appears to be cleaner in 1.10: http://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
+    # but for now this is stuck in 1.8 because of regex_field.
+    # might need to munge the data anyway to get the months with 0 transactions
+    #
+    # TODO: support different time bins? could generalize this approach with something like
+    #       <year>/<month mod 3> for quarters
+    #       <year>/<julian day mod 7> for weeks
+    #       also don't see myself being interested in anything except maybe years
+
+    if tags and merchants:
+        # not sure if there is any way to do this
+        logger.error('get_compare_data: both merchants and tags')
+        return {}
+
+    if not tags and not merchants:
+        # no query requested
+        logger.error('get_compare_data: no merchants or tags')
+        return {}
+
+    # generate appropriate query
+    qs = {}
+    if tags:
+        for tag in tags:
+            # TODO: not sure if this query works properly
+            qs[tag] = Transaction.objects.filter(Q(tag__name=tag) | Q(merchant__tag__name=tag))
+
+    if merchants:
+        for merchant in merchants:
+            qs[merchant] = Transaction.objects.filter(merchant__name=merchant)
+
+    if start:
+        if len(start) == 7:
+            start += '-01'  # day required
+        for k in qs:
+            qs[k] = qs[k].filter(transaction_date__gte=start)
+
+    if end:
+        if len(end) == 7:
+            end += '-01'  # day required
+        for k in qs:
+            qs[k] = qs[k].filter(transaction_date__lte=end)
+
+    # execute query, collate data into simple format, track max and min dates
+    # month_totals[key][month] = total
+    # key could be merchant, tag, ...
+    month_totals = {}
+    start_date = dt.today().date()
+    end_date = datetime.date(1970, 1, 1)
+    for key, txs in qs.items():
+        groups = defaultdict(float)
+        for tx in txs:
+            start_date = min(start_date, tx.transaction_date)
+            end_date = max(end_date, tx.transaction_date)
+            month = dt.strftime(tx.transaction_date, '%Y/%m')
+            groups[month] += float(tx.debit_amount)
+        month_totals[key] = groups
+
+    # collate into graphable data
+    # {'x': [datetime, ...],  # len = N
+    #  'key1': [float, ...],  # len = N
+    #  'key2': [float, ...]}  # len = N
+    x = month_range(start_date, end_date)
+    chartdata = {'x': [dt.strftime(date, '%Y/%m') for date in x]}
+    for key, totals in month_totals.items():
+        chartdata[key] = [totals[month] for month in chartdata['x']]
+
+    """
+    django-nvd3 wants something like this:
+    chartdata = {'x': xdata,
+                 'name1': 'series 1', 'y1': ydata, 'extra1': extra_serie,
+                 'name2': 'series 2', 'y2': ydata2, 'extra2': extra_serie}
+    """
+    return chartdata
+
+
+def month_range(start, end):
+    """get a list of datetimes incremented by exactly one month"""
+    # print [min_date + relativedelta(months=i) for i in range(48)]
+    date_vec = [start]
+    while date_vec[-1] < end:
+        date_vec.append(date_vec[-1] + relativedelta(months=1))
+    return date_vec
+
+
+def get_subdivide_data(tags):
+    return []
+    
+
+def transactions_compare(request, tags):
+    # TODO: this should render a template which hits an api for data
+    taglist = tags.split('+')
+    data = ''
+    data += 'tags: %s' % ', '.join(taglist)
+    chart_data = get_compare_data(taglist)
+    return HttpResponse(data)
+
+
+def transactions_subdivide(request, tags):
+    # TODO: this should render a template which hits an api for data
+    taglist = tags.split('+')
+    data = ''
+    data += 'tags: %s' % ', '.join(taglist)
+    chart_data = get_subdivide_data(taglist)
+    return HttpResponse(data)
 
 
 def timeseries(request):
