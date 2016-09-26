@@ -9,6 +9,7 @@ from taggit.managers import TaggableManager  # ??
 from django.utils.html import format_html
 import django_tables2 as tables
 from taggit.models import Tag
+from datetime import datetime
 
 
 __all__ = ['User', 'Account', 'Merchant', 'Statement', 'Transaction']
@@ -109,6 +110,13 @@ class Statement(models.Model):
         else:
             return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.end_date))
 
+    def __str__(self):
+        if self.end_date:
+            return '%s ending %s' % (self.account.name,
+                                     datetime.strftime(self.end_date, '%Y-%m-%d'))
+        else:
+            return '%s - unparsed' % self.account.name
+
     def __self__(self):
         if self.end_date:
             return '%s - %s' % (self.account.__str__(), self.end_date)
@@ -159,10 +167,20 @@ class Transaction(models.Model):
     def __str__(self):
         if self.merchant:
             desc = self.merchant.name
-        else:
+        elif self.description:
             desc = self.description
-        amount = self.debit_amount or -self.credit_amount
-        return '%s  $%10.2f  %s' % (self.transaction_date, amount, desc)
+        else:
+            desc = '(no description)'
+
+        if self.debit_amount is not None:
+            amount = self.debit_amount
+        elif self.credit_amount is not None:
+            amount = -self.credit_amount
+        else:
+            amount = 0
+
+        res = '%s  $%10.2f  %s' % (self.transaction_date, amount, desc)
+        return res
 
 
 class TagTable(tables.Table):
@@ -174,15 +192,23 @@ class TagTable(tables.Table):
 
     class Meta:
         model = Tag
+        attrs = {'class': 'display', 'id': 'tagtable'}
+        orderable = False
 
 
 class MerchantTable(tables.Table):
+    index = tables.Column()
     name = tables.Column()
     pattern = tables.Column()
     tags = tables.Column()
     total_transactions = tables.Column()
     total_amount = tables.Column()
-
+    
+    class Meta:
+        # html table attributes
+        attrs = {'class': 'display', 'id': 'merchanttable'}
+        orderable = False  # disable django-table2's sorting links (using datatables in js instead)
+        
 
 class TransactionTable(tables.Table):
     id = tables.Column()
@@ -195,4 +221,6 @@ class TransactionTable(tables.Table):
     tags = tables.Column()
 
     class Meta:
+        attrs = {'class': 'display', 'id': 'transactiontable'}
+        orderable = False
         sequence = ('transaction_date', 'merchant', 'amount', 'description', 'tags', 'account', 'statement', 'id')
