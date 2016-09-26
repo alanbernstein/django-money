@@ -1,5 +1,7 @@
 import glob
 import os
+import re
+import dateparser
 from collections import Counter
 from django.core.management.base import BaseCommand
 from accounts.models import Transaction, Merchant, Statement, Account
@@ -64,11 +66,18 @@ def populate_chase_credit_statements():
     filenames = glob.glob(glob_pattern)
     filenames.sort()
     for f in filenames:
-        # no need to use the date - that should be parsed from the contents, not the filename
+        # don't need this stuff, parse date from contents, not filename
         # m = re.search('[0-9]{4}-[0-9]{2}(-[0-9]{2})?', f)
         # date_str = m.group()
         # filename_date = dateparser.parse(date_str).date()
         file_path, file_name = os.path.split(f)
+
+        if False:
+            matches = Statement.objects.filter(account_id=account.id, file_name=file_name)
+            exists = len(matches) > 0
+            print(account, file_name, exists)
+            debug()
+            continue
         statement, new = Statement.objects.get_or_create(account_id=account.id,
                                                          # end_date=filename_date,
                                                          file_path=file_path,
