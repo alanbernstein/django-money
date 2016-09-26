@@ -1,0 +1,18 @@
+{% load static %}
+{% load django_tables2 %}
+<html>
+  <head>
+    <title>{{ resource }}s</title>
+    <script src="{% static "jquery-1.12.0.min.js" %}"></script>
+    <script src="{% static "jquery.dataTables.min.js" %}"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $('#{{ resource }}table').DataTable({"paging": false });
+      } );
+    </script>
+    <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.css"> <!-- not sure how to get the sort arrow images to work properly without using the CDN -->
+  </head>
+  <body>
+{% render_table table %}
+  </body>
+</html>
