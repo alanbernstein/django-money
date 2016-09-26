@@ -47,6 +47,7 @@ def describe_tags(account, taglist):
             else:
                 # TODO: figure this out
                 print('%40s  ?' % m.name)
+                debug()
 
     tags = Tag.objects.all()
     tagnames = [tag.name for tag in tags]
