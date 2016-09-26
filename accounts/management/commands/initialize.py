@@ -16,7 +16,7 @@ from accounts.base import get_account
 #from finance.parse_statements import parse_chase_credit_statement
 from panda.progressbar import ProgressBar
 from panda.debug import pp, debug, pm
-from panda.debug import annotate_time_indent as annotate
+#from panda.debug import annotate_time_indent as annotate
 
 
 class Command(BaseCommand):
