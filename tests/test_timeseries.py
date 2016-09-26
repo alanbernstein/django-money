@@ -1,7 +1,7 @@
 import datetime
 from accounts.models import Transaction
 from accounts.views import get_compare_data
-from tests.test_accounts import AccountTest
+from test_accounts import AccountTest
 
 
 class TimeseriesTest(AccountTest):
