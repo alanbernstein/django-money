@@ -4,8 +4,8 @@ much of this is not done yet
 
 ** steps to go from PDF statements -> auto tagged transactions
 1. pm download_statements   # TODO
-2. pm parse_pdf_statements  # includes the 'populate' step
-3. pm manage_transactions -a alan-chase-credit --clean-descrptions
+2. pm parse_pdf_statements  # includes the 'populate' and 'normalize' steps (should also include assign_merchants_auto())
+# 3. pm manage_transactions -a alan-chase-credit --clean-descriptions # now included in part 2
 4. pm manage_transactions -a alan-chase-credit --auto-add-merchants
    TODO: if no merchant match, but exact description match, AND previous transaction has tags, then create merchant
 
@@ -83,6 +83,9 @@ tables should be sortable
 - lodging
 - car
 - food
+  - ensure everything has meal OR groceries OR snack
+- bike details
+
 
 - remove burger-challenge-2015 from merchant tag, add to transaction tags
 
@@ -92,6 +95,7 @@ re-parse statements and re-add missing transactions, without duplicating
 
 ** other accounts
 in order:
+cash
 my debit
 lisa debit
 lisa credit
