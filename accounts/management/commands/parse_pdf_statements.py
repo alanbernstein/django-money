@@ -6,12 +6,13 @@ from datetime import datetime as dt
 from django.core.management.base import BaseCommand, CommandError
 
 from accounts.models import Account, Statement, Transaction, Merchant
-from accounts.management.commands.initialize import populate_chase_credit_statements
+from accounts.management.commands.manage_statements import populate_chase_credit_statements
+from accounts.management.commands.manage_transactions import normalize_descriptions
 
 # from finance.parse_statements import parse_chase_credit_statement
 from panda.progressbar import ProgressBar
 from panda.debug import pp, debug, pm
-from panda.debug import annotate_time_indent as annotate
+#from panda.debug import annotate_time_indent as annotate
 
 
 # NOTE: formerly known as import_pdf_statements
@@ -25,7 +26,11 @@ class Command(BaseCommand):
 
     @pm
     def handle(self, *args, **options):
-        """find all un-parsed statements, get correct parser, parse"""
+        """
+        1. populate statements in db from files
+        2. find all un-parsed statements, get correct parser, parse
+        3. normalize descriptions
+        """
 
         # statements = Statement.objects.all()
         # for statement in statements:
@@ -45,6 +50,10 @@ class Command(BaseCommand):
             parser = Parser(statement)
             parser.parse()
         print('done parsing %d statements' % unparsed.count())
+
+        normalize_descriptions()
+        
+        # assign_merchants_auto() # needs an account as of now
 
 
 # TODO: move this stuff to a parsers folder
@@ -103,10 +112,10 @@ class ChaseCreditParser(PdfStatementParser):
         raw_output = subprocess.check_output(transactions_command, shell=True)
         lines = str(raw_output).strip().split('\n')
 
-        print('  %d lines' % len(lines))
+        print('  reading transactions from %d lines' % len(lines))
         for line in lines:
             # TODO: this misses a few lines..
-            m = re.search('([0-1][0-9]/[0-9][0-9])(.*)([ -][0-9,]+\.[0-9][0-9])', line)
+            m = re.search('([0-1][0-9]/[0-9][0-9])(.*)([ -][0-9,]*\.[0-9][0-9])', line)
             if not m:
                 print(line)
                 continue
@@ -128,8 +137,8 @@ class ChaseCreditParser(PdfStatementParser):
                                                         statement_id=self.statement.id,
                                                         description_raw=desc_str)
             if new:
-                print('new transaction created')
-                debug()
+                print(tx)
+        debug()
 
         self.statement.parsed = True
         self.statement.save()
