@@ -1,4 +1,6 @@
 import re
+import os
+from collections import Counter
 import datetime
 from itertools import groupby
 from django.core.management.base import BaseCommand
@@ -63,6 +65,7 @@ def add_merchant(name, pattern, tags):
                                  pattern=pattern)
     mm.tags.add(*tags)
     mm.save()
+    print(mm)
 
 
 def add_merchant_pattern(merchant_id, pattern):
@@ -87,7 +90,10 @@ def add_transaction_tags(transaction_ids, tags=None, notes=None):
         if tags:
             tt.tags.add(*tags)
         if notes:
-            tt.notes = notes
+            if tt.notes == '':
+                tt.notes = notes
+            else:
+                print('%d already has a `notes`' % tid)
         tt.save()
 
 
@@ -145,9 +151,72 @@ def search(s):
     search_transactions(s)
 
 
+export_fname = os.getenv('HOME') + '/untagged-transactions.org'
+
+
+def export_untagged_to_org(account):
+    tx0 = Transaction.objects.filter(account_id=account.id, merchant=None, tags=None)
+
+    with open(export_fname, 'w') as f:
+        f.write('| id | description | amount | date | tags | notes |\n')
+        f.write('|-+-+-+-+-+-|\n')
+        for t in tx0:
+            f.write('| %d | %s | %s | %s | | |\n' % (t.id, t.description_raw, t.debit_amount, t.transaction_date))
+
+    print('wrote %d transactions to %s' % (tx0.count(), export_fname))
+
+
+def import_tags_from_org(account, fname=None, tags=None):
+    fname = fname or export_fname
+    with open(fname, 'r') as f:
+        lines = f.read().splitlines()
+
+    lines = lines[2:]
+    print('read %d transactions' % len(lines))
+    added_tags = 0
+    added_notes = 0
+
+    if tags is None:
+        # import free-form text
+        for line in lines:
+            trash, id, desc, amount, date, tagstr, notes, trash = [x.strip() for x in line.split('|')]
+
+            debug()
+            t = Transaction.objects.get(id=int(id))
+            if tagstr:
+                tags = [x.strip() for x in tagstr.split(',')]
+                t.tags.add(*tags)
+                added_tags += 1
+
+            if notes:
+                t.notes = notes
+                added_notes += 1
+
+            if tagstr or notes:
+                print(t, t.tags.all())
+            t.save()
+    else:
+        # add tags from input list to all lines in the file
+        for line in lines:
+            id, desc, amount, date, tagstr, notes = [x.strip() for x in line.split('|')]
+            t = Transaction.objects.get(id=int(id))
+            t.tags.add(*tags)
+            added_tags += 1
+            print(t)
+            t.save()
+
+    print('added tags to %d transactions' % added_tags)
+    if added_notes:
+        print('added notes to %d transactions' % added_notes)
+
+
 def list_transactions(account, mode='recent'):
     # find a good set of transactions to focus on...
     # recent_days = 3 * 30
+    #
+    # this can be a little confusing, e.g., the clipper grouping weirdness
+    # this is because i'm filtering out anything with a merchant or any tags
+    # might want to allow other modes that filter the transactions differently or not at all
     N = 20
     tx0 = Transaction.objects.filter(account_id=account.id, merchant=None, tags=None)
     # total = tx0.aggregate(Sum('debit_amount')).values()[0]  # breaks in python3 
@@ -199,7 +268,7 @@ def list_transactions(account, mode='recent'):
         for entry in grouped_by_count[0:N]:
             print('%40s (%d, $%6.2f)' % (entry[0], len(entry[1]), abs(sum([y for y in entry[1]]))))
 
-    if mode == 'group-total':
+    if mode in ['group-total', 'group-amount']:
         print('--\ntop %d description-groups by absolute total' % N)
         for entry in grouped_by_total[0:N]:
             print('%40s (%d, $%6.2f)' % (entry[0], len(entry[1]), abs(sum([y for y in entry[1]]))))
@@ -275,10 +344,24 @@ LOCATION_STRINGS = ['AUSTIN TX',
                     'PALO ALTO CA']
 
 
-def normalize_descriptions(account):
+def get_common_suffixes(account):
+    tx = Transaction.objects.all()
+    suffix_ngrams1 = [t.description_raw.lower().split()[-1] for t in tx]
+    suffix_ngrams2 = [' '.join(t.description_raw.lower().split()[-2:]) for t in tx]
+    ngram1_groups = Counter(suffix_ngrams1)
+    ngram2_groups = Counter(suffix_ngrams2)
+    for t in ngram2_groups.most_common()[0:10]:
+        print(t)
+    
+
+
+def normalize_descriptions(account=None):
     # TODO: break this up by account?
     # tx = Transaction.objects.filter(account_id=account.id)
-    unnormalized = Transaction.objects.filter(account_id=account.id, description=None)
+    if account:
+        unnormalized = Transaction.objects.filter(account_id=account.id, description=None)
+    else:
+        unnormalized = Transaction.objects.filter(description=None)
 
     for t in unnormalized:
         desc_short = t.description_raw
@@ -287,6 +370,8 @@ def normalize_descriptions(account):
         desc_short = re.sub('#[0-9]{3,}', ' ', desc_short)                   # other id numbers starting with '#'
         desc_short = re.sub('[0-9][0-9]/[0-9][0-9]', '', desc_short)         # mm/yy
         desc_short = re.sub('^SQ *', '', desc_short)                         # square prefix
+        # TODO: save location string, use to suggest 'travel'
+        # TODO: detect common suffixes as location strings
         for s in LOCATION_STRINGS:
             desc_short = re.sub(' %s$' % s, '', desc_short, re.IGNORECASE)   # location strings
         desc_short = re.sub('[0-9]{3}-[0-9]{3}-[0-9]{4}', '', desc_short)    # phone numbers
