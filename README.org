@@ -5,13 +5,13 @@ much of this is not done yet
 ** steps to go from PDF statements -> auto tagged transactions
 1. pm download_statements   # TODO
 2. pm parse_pdf_statements  # includes the 'populate' and 'normalize' steps (should also include assign_merchants_auto())
-# 3. pm manage_transactions -a alan-chase-credit --clean-descriptions # now included in part 2
-4. pm manage_transactions -a alan-chase-credit --auto-add-merchants
+3. ~pm manage_transactions -a account-slug --clean-descriptions # now included in part 2~
+4. pm manage_transactions -a account-slug --auto-add-merchants
    TODO: if no merchant match, but exact description match, AND previous transaction has tags, then create merchant
 
 
 ** manually manage merchants and tags
-pm manage_transactions -a alan-chase-credit --assign-interactive  # follow the displayed help
+pm manage_transactions -a account-slug --assign-interactive  # follow the displayed help
 *** utility functions:
 - search(search_string) - show all transactions and merchants matching some pattern
 - add_merchant_pattern(merchant_id, pattern) - for when an existing merchant doesnt get all transactions
@@ -19,7 +19,7 @@ pm manage_transactions -a alan-chase-credit --assign-interactive  # follow the d
 - add_tx_tags(tids, tag_list)
 
 *** data cleaning
-pm fix_year_boundary_dates -a alan-chase-credit
+pm fix_year_boundary_dates -a account-slug
 
 ** reporting
 pm manage_merchants --describe
@@ -27,7 +27,7 @@ pm manage_transactions --describe
 
 ** set up new users/accounts/data
 pm initialize
-pm initialize -a alan-chase-credit --tags --filename <path>
+pm initialize -a account-slug --tags --filename <path>
 
 
 * code organization
@@ -59,7 +59,6 @@ looking forward...
 * interface todo
 tables should be sortable
 
-
 | url                | current                                | plots | needs                                                           |
 |--------------------+----------------------------------------+-------+-----------------------------------------------------------------|
 | tags               | list of tags with count and total      |       | need to also tally merchant-tags; common shared tags            |
@@ -77,25 +76,6 @@ tables should be sortable
 | statements/<id>    | -                                      |       | list of transactions from statement                             |
 
 
-* ingestion todo
-** tagging
-- trips
-- lodging
-- car
-- food
-  - ensure everything has meal OR groceries OR snack
-- bike details
-
-
-- remove burger-challenge-2015 from merchant tag, add to transaction tags
-
 ** consuming statements
-remove duplicate chase transactions
+remove duplicate transactions
 re-parse statements and re-add missing transactions, without duplicating
-
-** other accounts
-in order:
-cash
-my debit
-lisa debit
-lisa credit
