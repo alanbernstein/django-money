@@ -8,6 +8,7 @@ from django.db.models import Sum
 from taggit.models import Tag
 from accounts.models import Transaction, Merchant
 from accounts.base import get_account
+from accounts.search import print_search_results as search
 
 from panda.debug import pp, debug, pm
 
@@ -41,7 +42,7 @@ def help():
     print('  add_tx_tags(transaction_id, tags)')
     print('  get_tx(ids_or_strings)')
     print('  get_tx_context(id)')
-    print('  search(string)')
+    print('  search(string[, tags=False, merchants=False, transactions=False])')
     print("  list_tx(account, 'recent')")
     print("  list_tx(account, 'recent-amount')")
     print("  list_tx(account, 'amount')")
@@ -120,35 +121,6 @@ def get_tx(qlist):
     if len(tx) == 1:
         tx = tx[0]
     return tx
-
-def search_merchants(s):
-    res = Merchant.objects.filter(name__icontains=s)
-    for m in res:
-        print('%d. %s - %s' % (m.id, m.name, m.pattern.pattern))
-
-
-def search_transactions(s):
-    res = Transaction.objects.filter(description__icontains=s)
-    for t in res:
-        mid = ''
-        if t.merchant:
-            mid = t.merchant.id
-        print('%d. %s (%s %s) - %s' % (t.id, t.description, t.transaction_date, t.debit_amount, mid))
-
-
-def search_tags(s):
-    res = Tag.objects.filter(name__icontains=s)
-    for t in res:
-        print('%d. %s' % (t.id, t.name))
-
-
-def search(s):
-    print('tags:')
-    search_tags(s)
-    print('merchants:')
-    search_merchants(s)
-    print('transactions')
-    search_transactions(s)
 
 
 export_fname = os.getenv('HOME') + '/untagged-transactions.org'
