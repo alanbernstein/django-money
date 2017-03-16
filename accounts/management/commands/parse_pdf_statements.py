@@ -10,18 +10,18 @@ from accounts.management.commands.manage_statements import populate_chase_credit
 from accounts.management.commands.manage_transactions import normalize_descriptions
 
 # from finance.parse_statements import parse_chase_credit_statement
-from panda.progressbar import ProgressBar
+# from panda.progressbar import ProgressBar
+# from panda.debug import annotate_time_indent as annotate
 from panda.debug import pp, debug, pm
-#from panda.debug import annotate_time_indent as annotate
 
 
 # NOTE: formerly known as import_pdf_statements
 class Command(BaseCommand):
-    help="todo"
+    help = "todo"
 
     def add_arguments(self, parser):
         # TODO: allow specifying account / date range / whatever
-        #parser.add_argument('file_glob', nargs='+', type=str)
+        # parser.add_argument('file_glob', nargs='+', type=str)
         pass
 
     @pm
@@ -45,14 +45,15 @@ class Command(BaseCommand):
         populate_chase_credit_statements()
 
         unparsed = Statement.objects.filter(downloaded=True, parsed=False)
+        print('parsing %d unparsed statements' % unparsed.count())
         for statement in unparsed:
             Parser = parser_map[statement.account.name]
             parser = Parser(statement)
             parser.parse()
-        print('done parsing %d statements' % unparsed.count())
+        print('done parsing')
 
         normalize_descriptions()
-        
+
         # assign_merchants_auto() # needs an account as of now
 
 
@@ -123,7 +124,7 @@ class ChaseCreditParser(PdfStatementParser):
             date_str = m.groups()[0].strip()
             year = self.statement.due_date.year
             if self.statement.due_date.month == 1 and date_str.startswith('12'):
-                # TODO: this is failing for some reason 
+                # TODO: this is failing for some reason
                 year -= 1
             timestamp = dt.strptime('%s/%02d' % (date_str, year % 100), DATE_PARSE_FORMAT)
 

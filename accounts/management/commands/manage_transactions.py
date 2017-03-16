@@ -1,10 +1,11 @@
 import re
 import os
-from collections import Counter
+from collections import Counter, defaultdict
 import datetime
 from itertools import groupby
 from django.core.management.base import BaseCommand
 from django.db.models import Sum
+from django.db.models import Q
 from taggit.models import Tag
 from accounts.models import Transaction, Merchant
 from accounts.base import get_account
@@ -91,7 +92,7 @@ def add_transaction_tags(transaction_ids, tags=None, notes=None):
         if tags:
             tt.tags.add(*tags)
         if notes:
-            if tt.notes == '':
+            if tt.notes == '' or tt.notes is None:
                 tt.notes = notes
             else:
                 print('%d already has a `notes`' % tid)
@@ -227,7 +228,7 @@ def list_transactions(account, mode='recent', N=20):
     # this is because i'm filtering out anything with a merchant or any tags
     # might want to allow other modes that filter the transactions differently or not at all
     tx0 = Transaction.objects.filter(account_id=account.id, merchant=None, tags=None)
-    # total = tx0.aggregate(Sum('debit_amount')).values()[0]  # breaks in python3 
+    # total = tx0.aggregate(Sum('debit_amount')).values()[0]  # breaks in python3
     total = float(sum([t.debit_amount for t in tx0]))
     num_tx = len(tx0)
 
@@ -262,7 +263,7 @@ def list_transactions(account, mode='recent', N=20):
         for t in by_amount[0:N]:
             print('%6d %s' % (t.id, t))
 
-    #if mode == 'recent-amount':
+    # if mode == 'recent-amount':
     #    print('--\ntop %d recent transactions by amount:' % N)
     #    for t in recent_by_amount[0:N]:
     #        print('%6d %s' % (t.id, t))
