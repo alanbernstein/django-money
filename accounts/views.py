@@ -34,11 +34,14 @@ TODO: view tag breakdown, but also view subtag breakdown
   - etc
 
 options for decent charts:
+http://chartit.shutupandship.com/
 https://www.djangopackages.com/grids/g/charts/
 
 - django-nvd3
   - depends on python-nvd3, nvd3, bower - might be the best looking/most mature (https://pypi.python.org/pypi/django-nvd3)
 
+
+http://nvd3.org/examples/
 
 
 options for tag inputs:
