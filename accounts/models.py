@@ -29,7 +29,9 @@ class User(models.Model):
       # - list of tuples for the types variable
       # - type field
 
-statement_root = '/Users/abernstein/Downloads/finance/statements/'
+statement_root = os.getenv('STATEMENTS')
+
+
 class Account(models.Model):
     name = models.CharField(max_length=300)
     user = models.ForeignKey(User)
@@ -44,6 +46,10 @@ class Account(models.Model):
             return format_html('<a href="/accounts/%s">%s</a>' % (self.id, self.id))
         else:
             return format_html('<a href="/accounts/%s">%s</a>' % (self.id, self.name))
+
+    def get_statements_directory(self):
+        # TODO when i need it working on both desktop and laptop
+        pass
 
     def save(self, *args, **kwargs):
         # set derived stuff if new
@@ -82,7 +88,7 @@ class Merchant(models.Model):
     def __str__(self):
         m = self.name
         tags = self.tags.all()
-        #debug()
+        # debug()
         if tags:
             tagnames = [t.name for t in tags]
             m = '%s (%s)' % (m, ', '.join(tagnames))
@@ -115,13 +121,13 @@ class Statement(models.Model):
             return '%s ending %s' % (self.account.name,
                                      datetime.strftime(self.end_date, '%Y-%m-%d'))
         else:
-            return '%s - unparsed' % self.account.name
+            return '%s - unparsed' % self.file_name
 
     def __self__(self):
         if self.end_date:
             return '%s - %s' % (self.account.__str__(), self.end_date)
         else:
-            return '%s - unparsed' % self.account.__str__()
+            return '%s (unparsed)' % self.account.__str__()
 
 
 class Transaction(models.Model):
@@ -203,12 +209,12 @@ class MerchantTable(tables.Table):
     tags = tables.Column()
     total_transactions = tables.Column()
     total_amount = tables.Column()
-    
+
     class Meta:
         # html table attributes
         attrs = {'class': 'display', 'id': 'merchanttable'}
         orderable = False  # disable django-table2's sorting links (using datatables in js instead)
-        
+
 
 class TransactionTable(tables.Table):
     id = tables.Column()
