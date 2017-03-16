@@ -59,12 +59,13 @@ def remove_unparsed_statements():
 def populate_chase_credit_statements():
     """reads statements in download directory, and adds them to database (without parsing)"""
     account, new = Account.objects.get_or_create(slug='alan-chase-credit')
-    glob_pattern = account.statements_directory + 'chase-credit-20*.pdf'
+    glob_pattern = account.statements_directory + '/chase-credit-20*.pdf'
     # TODO: move elsewhere and generalize
     # TODO: set up better organization of files
 
     filenames = glob.glob(glob_pattern)
     filenames.sort()
+    created_count = 0
     for f in filenames:
         # don't need this stuff, parse date from contents, not filename
         # m = re.search('[0-9]{4}-[0-9]{2}(-[0-9]{2})?', f)
@@ -82,9 +83,11 @@ def populate_chase_credit_statements():
                                                          # end_date=filename_date,
                                                          file_path=file_path,
                                                          file_name=file_name)  # need to migrate before this will work
+
+        created_count += new
         statement.downloaded = True
         statement.save()
         if new:
             print(statement)
 
-    print('done populating (checked %d PDF files)' % len(filenames))
+    print('done populating (checked %d PDF files, found %d new statements)' % (len(filenames), created_count))
