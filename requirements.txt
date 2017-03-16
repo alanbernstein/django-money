@@ -13,6 +13,7 @@ ipython-genutils==0.1.0
 pathlib2==2.1.0
 pexpect==4.2.0
 pickleshare==0.7.3
+progressbar==2.3
 prompt-toolkit==1.0.5
 ptyprocess==0.5.1
 Pygments==2.1.3
