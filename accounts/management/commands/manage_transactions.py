@@ -182,14 +182,50 @@ def import_tags_from_org(account, fname=None, tags=None):
         print('added notes to %d transactions' % added_notes)
 
 
-def list_transactions(account, mode='recent'):
+def list_tags(account, mode='count', N=50):
+    # TODO: use raw sql to improve this
+    # content types:
+    # 12: merchants
+    # 14: transactions
+    tags = Tag.objects.all()
+
+    tag_tx_counts = {}
+    tag_tx_sums = {}
+    for tag in tags:
+        # t_count = Transaction.objects.filter(tags__name__in=[tag.name]).count(),
+        # mt_count = Transaction.objects.filter(merchant_id__in=merchant_ids)
+        merchant_ids = [m.id for m in Merchant.objects.filter(tags__name__in=[tag.name])]
+        txs = Transaction.objects.filter(Q(tags__name__in=[tag.name]) | Q(merchant_id__in=merchant_ids))
+
+        tag_tx_counts[tag.name] = (txs.count())
+        tag_tx_sums[tag.name] = float(sum([t.debit_amount for t in txs]))
+
+    if mode == 'count':
+        name_count = [(v, k) for k, v in tag_tx_counts.items()]
+        name_count.sort(key=lambda x: -x[0])
+        for nc in name_count[:N]:
+            print('%5d  %s' % nc)
+
+    elif mode == 'amount':
+        name_amount = [(v, k) for k, v in tag_tx_sums.items()]
+        name_amount.sort(key=lambda x: -x[0])
+        for na in name_amount[:N]:
+            print('$%9.2f  %s' % na)
+
+    elif mode == 'count-exclusive':
+        pass
+
+    elif mode == 'amount-exclusive':
+        pass
+
+
+def list_transactions(account, mode='recent', N=20):
     # find a good set of transactions to focus on...
     # recent_days = 3 * 30
     #
     # this can be a little confusing, e.g., the clipper grouping weirdness
     # this is because i'm filtering out anything with a merchant or any tags
     # might want to allow other modes that filter the transactions differently or not at all
-    N = 20
     tx0 = Transaction.objects.filter(account_id=account.id, merchant=None, tags=None)
     # total = tx0.aggregate(Sum('debit_amount')).values()[0]  # breaks in python3 
     total = float(sum([t.debit_amount for t in tx0]))
@@ -201,6 +237,7 @@ def list_transactions(account, mode='recent'):
     # sort by recent/amount
     # min_date = datetime.datetime.today() - datetime.timedelta(days=recent_days)
     # recent = tx0.filter(transaction_date__gte=min_date)
+    N = min(N, num_tx)
     recent = tx0[num_tx-N-1:num_tx-1]
     # recent_by_amount = recent.order_by('-debit_amount')
 
