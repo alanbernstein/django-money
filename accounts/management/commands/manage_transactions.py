@@ -40,7 +40,8 @@ def help():
     print('  help()')
     print('  add_merchant(name, pattern, tags)')
     print('  add_merchant_pattern(merchant_id, pattern)')
-    print('  add_tx_tags(transaction_id, tags)')
+    print('  add_merchant_tags(merchant_id, tags, notes)')
+    print('  add_tx_tags(transaction_id, tags, notes)')
     print('  get_tx(ids_or_strings)')
     print('  get_tx_context(id)')
     print('  search(string[, tags=False, merchants=False, transactions=False])')
@@ -50,6 +51,7 @@ def help():
     print("  list_tx(account, 'group-count')")
     print("  list_tx(account, 'group-total')")
     print("  assign_merchants_auto(account)")
+    print("  list_tags()")
 
 
 def assign_interactive(account):
@@ -95,11 +97,30 @@ def add_transaction_tags(transaction_ids, tags=None, notes=None):
             if tt.notes == '' or tt.notes is None:
                 tt.notes = notes
             else:
-                print('%d already has a `notes`' % tid)
+                print('%d already has a `notes`: %s' % (tid, tt.notes))
         tt.save()
 
 
 add_tx_tags = add_transaction_tags
+
+
+def add_merchant_tags(merchant_ids, tags=None, notes=None):
+    if tags and not type(tags) == list:
+        tags = [tags]
+
+    if not type(merchant_ids) == list:
+        merchant_ids = [merchant_ids]
+
+    for mid in merchant_ids:
+        mm = Merchant.objects.get(id=mid)
+        if tags:
+            mm.tags.add(*tags)
+        if notes:
+            if mm.notes == '' or mm.notes is None:
+                mm.notes = notes
+            else:
+                print('%d already has a `notes`: %s' % (mid, mm.notes))
+        mm.save()
 
 
 def get_tx_context(tid, context=5):
@@ -195,6 +216,8 @@ def list_tags(account, mode='count', N=50):
     for tag in tags:
         # t_count = Transaction.objects.filter(tags__name__in=[tag.name]).count(),
         # mt_count = Transaction.objects.filter(merchant_id__in=merchant_ids)
+
+        # TODO consolidate this with views.get_transactions_by_tag
         merchant_ids = [m.id for m in Merchant.objects.filter(tags__name__in=[tag.name])]
         txs = Transaction.objects.filter(Q(tags__name__in=[tag.name]) | Q(merchant_id__in=merchant_ids))
 
