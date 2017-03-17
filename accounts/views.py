@@ -20,7 +20,9 @@ from accounts.models import (Account,
                              User,
                              TagTable,
                              MerchantTable,
-                             TransactionTable
+                             TransactionTable,
+                             AccountTable,
+                             StatementTable,
                              )
 
 from panda.debug import debug
@@ -31,7 +33,13 @@ TODO: view tag breakdown, but also view subtag breakdown
 - but also, a chart of all transactions matching a single tag, split up by other tags they also have. eg:
   - food: groceries/meal/date
   - travel: airfare/lodging/food
-  - etc
+- etc
+
+IDEA: label some tags as "top-level", that is, tags in that set will never be used together
+- bills
+- food
+- transportation
+IDEA: figure out this set automatically
 
 options for decent charts:
 http://chartit.shutupandship.com/
@@ -98,6 +106,7 @@ def get_merchant_info(merchants=None):
     for m in merchants:
         m_tx = Transaction.objects.filter(merchant_id=m.id)
         row = {}
+        row['id'] = m.id
         row['name'] = m.as_link()
         row['pattern'] = m.pattern.pattern
         row['tags'] = m.get_tags_as_links()
@@ -143,6 +152,51 @@ def get_transaction_info(tx=None):
     return rows
 
 
+def get_statement_info(statements=None):
+    if not hasattr(statements, '__iter__'):
+        # convert single instance to list
+        statements = [statements]
+
+    if isinstance(statements[0], int):
+        # get transactions from ids
+        ids = statements
+        statements = Statement.objects.filter(id__in=ids)
+
+    rows = []
+    for s in statements:
+        row = {}
+        row['id'] = s.as_link(self_link=True)
+        row['account'] = s.account
+        row['end_date'] = s.end_date
+        row['count'] = s.get_count()
+        row['total'] = s.get_total()
+        rows.append(row)
+
+    return rows
+
+
+def get_account_info(accounts=None):
+    if not hasattr(accounts, '__iter__'):
+        # convert single instance to list
+        accounts = [accounts]
+
+    if isinstance(accounts[0], int):
+        # get transactions from ids
+        ids = accounts
+        accounts = Account.objects.filter(id__in=ids)
+
+    rows = []
+    for a in accounts:
+        row = {}
+        row['id'] = a.as_link(self_link=True)
+        row['name'] = a.name
+        row['user'] = a.user
+        row['type'] = Account.ACCOUNT_TYPES[a.type][1]
+        rows.append(row)
+
+    return rows
+
+
 def transaction_list_simple(request):
     resp = ''
 
@@ -156,18 +210,33 @@ def transaction_list_simple(request):
 transaction_list = transaction_list_table
 
 
+def get_merchants_with_similar_tags(tags):
+    # TODO
+    return []
+
+
 def transaction_detail(request, *args, **kwargs):
     tid = kwargs['transaction_id']
-    # t = Transaction.objects.get(id=tid)
 
-    resp = ''
-    resp += '<h2>transaction detail</h2>'
-    for k, v in get_transaction_info([int(tid)])[0].items():
-        resp += '%s: %s<br>' % (k, v)
+    t = Transaction.objects.get(id=tid)
+    row = get_transaction_info(t)
+    table0 = TransactionTable(row)
 
-    resp += '<h3>same merchant</h3>'
-    resp += '<h3>same tags</h3>'
-    return HttpResponse(resp)
+    tx = Transaction.objects.filter(merchant_id=t.merchant.id)
+    rows = get_transaction_info(tx)
+    table1 = TransactionTable(rows)
+
+    # m = get_merchants_with_similar_tags(t.tags.all())
+    m = [t.merchant]
+    rows = get_merchant_info(m)
+    table2 = MerchantTable(rows)
+
+    return render(request, 'transaction-detail.html', {
+        'merchant_summary': t.merchant.get_summary(),
+        'table0': table0,
+        'table1': table1,
+        'table2': table2,
+    })
 
 
 def merchants_untagged(request, sort=False):
@@ -179,7 +248,6 @@ def merchants_untagged(request, sort=False):
                   {'table': table, 'resource': 'merchant'})
 
 
-
 def transactions_untagged(request, sort=False):
     # TODO: sort by frequency
     # sorted_items = profile.ItemList.annotate(itemcount=Count('name'))
@@ -189,10 +257,9 @@ def transactions_untagged(request, sort=False):
     rows = get_transaction_info(tx)
     rows2 = [row for row in rows if not row['tags']]  # TODO: why is this necessary
     table = TransactionTable(rows2)
-    #return render(request, 'datatable-basic.html', {'table': table})
+    # return render(request, 'datatable-basic.html', {'table': table})
     return render(request, 'datatable.html',
                   {'table': table, 'resource': 'transaction'})
-
 
 
 def merchants_unnamed(request, sort=True):
@@ -242,17 +309,28 @@ merchant_list = merchant_list_table
 
 
 def account_detail(request, *args, **kwargs):
-    resp = ''
-    resp += '<h2>account detail</h2>'
-
-    return HttpResponse(resp)
+    aid = kwargs['account_id']
+    a = Account.objects.get(id=aid)
+    statements = Statement.objects.filter(account_id=aid)
+    account_summary = format_html('%d statements' % len(statements))
+    rows = get_statement_info(statements)
+    table = StatementTable(rows)
+    return render(request, 'account-detail.html', {'table': table,
+                                                   'account_description': a.__str__(),
+                                                   'account_summary': account_summary})
 
 
 def statement_detail(request, *args, **kwargs):
-    resp = ''
-    resp += '<h2>statement detail</h2>'
+    sid = kwargs['statement_id']
+    s = Statement.objects.get(id=sid)
+    statement_summary = format_html('$%.2f, %d transactions' % (s.get_total(), s.get_count()))
 
-    return HttpResponse(resp)
+    tx = Transaction.objects.filter(statement_id=s.id)
+    rows = get_transaction_info(tx)
+    table = TransactionTable(rows)
+    return render(request, 'statement-detail.html', {'table': table,
+                                                     'statement_description': s.__str__(),
+                                                     'statement_summary': statement_summary})
 
 
 def merchant_detail(request, *args, **kwargs):
@@ -260,31 +338,29 @@ def merchant_detail(request, *args, **kwargs):
     mid = kwargs['merchant_id']
     merchant = Merchant.objects.get(id=mid)
     tx = Transaction.objects.filter(merchant_id=mid)
-    count = tx.count()
-    key = 'debit_amount'
-    amount = tx.aggregate(Sum(key))[key + '__sum']
-
-    merchant_summary = format_html('$%.2f, %d transactions<br>%s' % (amount, count, merchant.pattern.pattern))
 
     rows = get_transaction_info(tx)
     table = TransactionTable(rows)
     return render(request, 'merchant-detail.html', {'table': table,
                                                     'merchant_name': merchant.name,
-                                                    'merchant_summary': merchant_summary})
+                                                    'merchant_summary': merchant.get_summary()})
 
 
 def account_list(request, *args, **kwargs):
-    resp = ''
-    resp += '<h2>account list</h2>'
-
-    return HttpResponse(resp)
+    accounts = Account.objects.all()
+    rows = get_account_info(accounts)
+    table = AccountTable(rows)
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'account'})
 
 
 def statement_list(request, *args, **kwargs):
-    resp = ''
-    resp += '<h2>statement list</h2>'
+    statements = Statement.objects.all()
+    rows = get_statement_info(statements)
+    table = StatementTable(rows)
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'statement'})
 
-    return HttpResponse(resp)
 
 
 def tag_detail(request, *args, **kwargs):
@@ -294,12 +370,15 @@ def tag_detail(request, *args, **kwargs):
     resp = ''
     resp += '<h2>%s</h2>' % tag.name
 
+    resp += '<h3>related tags</h3>'
+    resp += '(todo)'
+
     resp += '<h3>merchants</h3>'
     for merchant in Merchant.objects.filter(tags__id__in=[tag_id]):
         resp += merchant.as_link() + '<br>'
 
     resp += '<h3>transactions</h3>'
-    for t in Transaction.objects.filter(tags__id__in=[tag_id]):
+    for t in get_transactions_by_tag(tag):
         resp += t.as_link() + '<br>'
 
     return HttpResponse(resp)
@@ -321,16 +400,26 @@ def tag_list_table(request):
                   {'table': table, 'resource': 'tag'})
 
 
+def get_transactions_by_tag(tag, merchants=True):
+    tag_merchants = Merchant.objects.filter(tags__name__in=[tag.name])
+    merchant_ids = [m.id for m in tag_merchants]
+
+    tag_tx = Transaction.objects.filter(Q(tags__name__in=[tag.name]) | Q(merchant_id__in=merchant_ids))
+
+    return tag_tx
+
+
 def get_tag_info():
     # return Tag.objects.all()
-    
+
     rows = []
     tags = Tag.objects.all()
 
     for tag in tags:
         row = {}
+        row['id'] = tag.id
         row['name'] = format_html('<a href="tags/%s">%s</a>' % (tag.id, tag.name))
-        tag_tx = Transaction.objects.filter(tags__name__in=[tag.name])
+        tag_tx = get_transactions_by_tag(tag)
         row['total_transactions'] = len(tag_tx)
         row['total_amount'] = sum([t.debit_amount for t in tag_tx])
         rows.append(row)
@@ -354,7 +443,7 @@ tag_list = tag_list_table
 def get_compare_data(merchants=None, tags=None, start=None, end=None):
     """inputs:
     merchants = [merchant_name1, ...]
-      OR 
+      OR
     tags = [tag_name1, ...]
 
     start = 'YYYY-MM-DD'
@@ -449,7 +538,7 @@ def month_range(start, end):
 
 def get_subdivide_data(tags):
     return []
-    
+
 
 def transactions_compare(request, tags):
     # TODO: this should render a template which hits an api for data

@@ -1,15 +1,16 @@
 from __future__ import unicode_literals
 
 import os
+from datetime import datetime
 
 from django.db import models
+from django.db.models import Sum, Count, Q
 from django.template.defaultfilters import slugify
 from regex_field import RegexField
 from taggit.managers import TaggableManager  # ??
 from django.utils.html import format_html
 import django_tables2 as tables
 from taggit.models import Tag
-from datetime import datetime
 
 
 __all__ = ['User', 'Account', 'Merchant', 'Statement', 'Transaction']
@@ -24,10 +25,10 @@ class User(models.Model):
 
 # class TestIdea(models.Model):
 #     make_types(['type_name1', 'type_name2', 'bar'])
-      # wonder if there is a way to have this automatically define all:
-      # - member variables
-      # - list of tuples for the types variable
-      # - type field
+# wonder if there is a way to have this automatically define all:
+# - member variables
+# - list of tuples for the types variable
+# - type field
 
 statement_root = os.getenv('STATEMENTS')
 
@@ -50,6 +51,13 @@ class Account(models.Model):
     def get_statements_directory(self):
         # TODO when i need it working on both desktop and laptop
         pass
+
+    def get_statements_count(self):
+        # TODO why doesnt this work?
+        # s = Statement.objects.filter(account_id==self.id)
+        # c = s.count()
+        # return c
+        return 0
 
     def save(self, *args, **kwargs):
         # set derived stuff if new
@@ -85,6 +93,14 @@ class Merchant(models.Model):
         else:
             return format_html('<a href="/merchants/%s">%s</a>' % (self.id, self.name))
 
+    def get_summary(self):
+        tx = Transaction.objects.filter(merchant_id=self.id)
+        count = tx.count()
+        key = 'debit_amount'
+        amount = tx.aggregate(Sum(key))[key + '__sum']
+
+        return format_html('$%.2f, %d transactions<br>%s' % (amount, count, self.pattern.pattern))
+
     def __str__(self):
         m = self.name
         tags = self.tags.all()
@@ -115,6 +131,24 @@ class Statement(models.Model):
             return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.id))
         else:
             return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.end_date))
+
+    def get_count(self, debit_only=True):
+        # TODO debit only
+        # TODO is there a more django-y way to do this?
+        tx = Transaction.objects.filter(statement_id=self.id)
+        return tx.count()
+
+    def get_total(self, debit_only=True):
+        # TODO debit only
+        # TODO is there a more django-y way to do this?
+        tx = Transaction.objects.filter(statement_id=self.id)
+        key = 'debit_amount'
+        total = tx.aggregate(Sum(key))[key + '__sum']
+        if not total:
+            # TODO this shouldnt happen
+            total = 0
+
+        return total
 
     def __str__(self):
         if self.end_date:
@@ -203,7 +237,7 @@ class TagTable(tables.Table):
 
 
 class MerchantTable(tables.Table):
-    index = tables.Column()
+    id = tables.Column()
     name = tables.Column()
     pattern = tables.Column()
     tags = tables.Column()
@@ -214,6 +248,7 @@ class MerchantTable(tables.Table):
         # html table attributes
         attrs = {'class': 'display', 'id': 'merchanttable'}
         orderable = False  # disable django-table2's sorting links (using datatables in js instead)
+        sequence = ('id', 'name', 'tags', 'total_transactions', 'total_amount', 'pattern')
 
 
 class TransactionTable(tables.Table):
@@ -229,4 +264,30 @@ class TransactionTable(tables.Table):
     class Meta:
         attrs = {'class': 'display', 'id': 'transactiontable'}
         orderable = False
-        sequence = ('transaction_date', 'merchant', 'amount', 'description', 'tags', 'account', 'statement', 'id')
+        sequence = ('id', 'transaction_date', 'merchant', 'amount', 'description', 'tags', 'account', 'statement')
+
+
+class StatementTable(tables.Table):
+    id = tables.Column()
+    account = tables.Column()
+    count = tables.Column()
+    total = tables.Column()
+    end_date = tables.Column()
+    # TODO common tags? notes?
+
+    class Meta:
+        attrs = {'class': 'display', 'id': 'statementtable'}
+        orderable = False
+        sequence = ('id', 'account', 'end_date', 'count', 'total')
+
+
+class AccountTable(tables.Table):
+    id = tables.Column()
+    name = tables.Column()
+    user = tables.Column()
+    type = tables.Column()
+
+    class Meta:
+        attrs = {'class': 'display', 'id': 'accounttable'}
+        orderable = False
+        sequence = ('id', 'name', 'user', 'type')

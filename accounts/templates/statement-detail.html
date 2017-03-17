@@ -1,0 +1,11 @@
+<html>
+    <head>
+        <title>statement detail</title>
+    </head>
+    <body>
+        <h2>{{statement_description}}</h2>
+        {{ statement_summary }}
+        {% load django_tables2 %}
+        {% render_table table %}
+    </body>
+</html>

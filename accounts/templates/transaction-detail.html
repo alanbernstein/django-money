@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <title>transaction detail</title>
+    </head>
+    <body>
+        <h2>transaction detail</h2>
+
+        {% load django_tables2 %}
+        {% render_table table0 %}
+
+        <h3>merchants with similar tags</h3>
+        (todo)
+        {% render_table table2 %}
+
+        <h3>same merchant</h3>
+        {{ merchant_summary }}
+        {% render_table table1 %}
+
+    </body>
+</html>

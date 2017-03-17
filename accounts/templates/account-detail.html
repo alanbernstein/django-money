@@ -1,0 +1,11 @@
+<html>
+    <head>
+        <title>accountt detail</title>
+    </head>
+    <body>
+        <h2>{{account_description}}</h2>
+        {{ account_summary }}
+        {% load django_tables2 %}
+        {% render_table table %}
+    </body>
+</html>
