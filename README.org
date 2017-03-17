@@ -55,24 +55,31 @@ actually, this sounds very repetitive - maybe just put this in accounts...
 looking forward...
 
 
-* interface todo
+
+
+* todo
+  - statement 463 is screwed up (2015-05) and 2015-04 (double import) is screwed up
+
+** interface
 tables should be sortable
 
-| url                | current                                | plots | needs                                                           |
-|--------------------+----------------------------------------+-------+-----------------------------------------------------------------|
-| tags               | list of tags with count and total      |       | need to also tally merchant-tags; common shared tags            |
-| tags/<id>          | merchants, transactions                |       | transactions with merchant-tags, table format with more details |
-| transactions       | most recent transaction table          |       |                                                                 |
-| transactions/<id>  | transaction detail                     |       | same merchant, same tags tables                                 |
-| merchants          | list of merchants                      |       | move pattern column to far right                                |
-| merchants/<id>     | list of transactions                   |       | list of similar merchants (same tag list)                       |
-| merchants/untagged |                                        |       |                                                                 |
-| merchants/unnamed  | list of descr-groups without merchants |       |                                                                 |
-| timeseries         |                                        |       |                                                                 |
-| accounts           | -                                      |       |                                                                 |
-| accounts/<id>      | -                                      |       |                                                                 |
-| statements         | -                                      |       | list of statements with date, total, maybe common tags          |
-| statements/<id>    | -                                      |       | list of transactions from statement                             |
+| url                   | current                                 | plots | needs                                   | needs formatting |
+|-----------------------+-----------------------------------------+-------+-----------------------------------------+------------------|
+| tags                  | list of tags with count and total       |       | related tags, exclusive count and total | no               |
+| tags/<id>             | merchants, transactions                 |       | related tags                            | yes              |
+| transactions          | most recent transaction table           |       |                                         | no               |
+| transactions/<id>     | transaction detail                      |       | merchants with same tags                | yes              |
+| transactions/untagged |                                         |       |                                         | no               |
+| transactions/unnamed  |                                         |       |                                         |                  |
+| merchants             | table of merchants                      |       |                                         | no               |
+| merchants/<id>        | list of transactions                    |       | merchants with same tags                | yes              |
+| merchants/untagged    | table of merchants without tags         |       |                                         | no               |
+| merchants/unnamed     | table of descr-groups without merchants |       |                                         | no               |
+| accounts              | table of accounts                       |       |                                         | no               |
+| accounts/<id>         | table of statements from account        |       |                                         | yes              |
+| statements            | all statements w/ date, count, total    |       |                                         | no               |
+| statements/<id>       | count, total, list of transactions      |       |                                         | yes              |
+| timeseries            |                                         |       |                                         |                  |
 
 
 ** consuming statements
