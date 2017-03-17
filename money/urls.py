@@ -18,7 +18,7 @@ from django.contrib import admin
 import accounts.views
 
 urlpatterns = [
-    url(r'^api/', include('api.urls')),  # not sure about this
+    url(r'^api/', include('api.v1.urls')),  # not sure about this
     url(r'^admin/', admin.site.urls),
     url(r'^$', accounts.views.index, name='index'),
     url(r'^tags$', accounts.views.tag_list, name='tag-list'),
