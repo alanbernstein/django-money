@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.generic import View
 from django.utils.html import format_html
 
 from accounts.models import (Statement,
@@ -22,9 +23,22 @@ def statement_detail(request, *args, **kwargs):
                                                      'statement_summary': statement_summary})
 
 
-def statement_list(request, *args, **kwargs):
+def statement_list_table(request, *args, **kwargs):
     statements = Statement.objects.all()
     rows = get_statement_info(statements)
     table = StatementTable(rows)
     return render(request, 'datatable.html',
                   {'table': table, 'resource': 'statement'})
+
+
+class StatementListView(View):
+    def get(self, request, *args, **kwargs):
+        statements = Statement.objects.all()
+        rows = get_statement_info(statements)
+        table = StatementTable(rows)
+        return render(request, 'datatable.html',
+                      {'table': table, 'resource': 'statement'})
+
+
+# statement_list = statement_list_table
+statement_list = StatementListView.as_view()

@@ -2,6 +2,7 @@ import logging
 
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.views.generic import ListView
 from taggit.models import Tag
 
 from accounts.models import Merchant, TagTable
@@ -38,6 +39,10 @@ def tag_detail(request, *args, **kwargs):
 tag_priority = ['bills', 'grocery', 'meal', 'car', 'bike']
 
 
+class TagListView(ListView):
+    model = Tag
+
+
 def tag_list_table(request):
     # table columns:
     # - total transactions
@@ -64,3 +69,4 @@ def tag_list_simple(request):
 
 
 tag_list = tag_list_table
+# tag_list = TagListView.as_view()

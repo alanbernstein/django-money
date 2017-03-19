@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.generic import View
 from django.http import HttpResponse
 
 from accounts.models import (Transaction,
@@ -40,14 +41,48 @@ def transaction_list_simple(request):
 transaction_list = transaction_list_table
 
 
-def transaction_detail(request, *args, **kwargs):
+class TransactionDetailView(View):
+    def get(self, request, *args, **kwargs):
+        tid = kwargs['transaction_id']
+
+        t = Transaction.objects.get(id=tid)
+        row = get_transaction_info(t)
+        table0 = TransactionTable(row)
+
+        m = t.merchant
+        if m:
+            tx = Transaction.objects.filter(merchant_id=m.id)
+            summary = m.get_summary()
+        else:
+            tx = []
+            summary = '(no merchant)'
+        rows = get_transaction_info(tx)
+        table1 = TransactionTable(rows)
+
+        # m = get_merchants_with_similar_tags(t.tags.all())
+        rows = get_merchant_info(t.merchant)
+        table2 = MerchantTable(rows)
+
+        return render(request, 'transaction-detail.html', {
+            'merchant_summary': summary,
+            'table0': table0,
+            'table1': table1,
+            'table2': table2,
+        })
+
+
+def transaction_detail_func(request, *args, **kwargs):
     tid = kwargs['transaction_id']
 
     t = Transaction.objects.get(id=tid)
     row = get_transaction_info(t)
     table0 = TransactionTable(row)
 
-    tx = Transaction.objects.filter(merchant_id=t.merchant.id)
+    mid = t.merchant.id
+    if mid:
+        tx = Transaction.objects.filter(merchant_id=mid)
+    else:
+        tx = []
     rows = get_transaction_info(tx)
     table1 = TransactionTable(rows)
 
@@ -62,6 +97,10 @@ def transaction_detail(request, *args, **kwargs):
         'table1': table1,
         'table2': table2,
     })
+
+
+# transaction_detail = transaction_detail_func
+transaction_detail = TransactionDetailView.as_view()
 
 
 def transactions_untagged(request, sort=False):
