@@ -1,32 +1,12 @@
-import datetime
-from datetime import datetime as dt
-from dateutil.relativedelta import relativedelta
-from itertools import groupby
-from collections import defaultdict
-import logging
-
-from django.shortcuts import render, render_to_response
-from django.http import HttpResponse
-from django.core.urlresolvers import resolve
 from django.shortcuts import render
 from django.utils.html import format_html
-from django.db.models import Sum, Count, Q
-from taggit.models import Tag
 
-from accounts.models import (Account,
-                             Statement,
+from accounts.models import (Statement,
                              Transaction,
-                             Merchant,
-                             User,
-                             TagTable,
-                             MerchantTable,
                              TransactionTable,
-                             AccountTable,
                              StatementTable,
                              )
 from accounts.helpers import get_transaction_info, get_statement_info
-
-from panda.debug import debug
 
 
 def statement_detail(request, *args, **kwargs):

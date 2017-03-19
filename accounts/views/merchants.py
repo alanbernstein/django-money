@@ -1,28 +1,11 @@
-import datetime
-from datetime import datetime as dt
-from dateutil.relativedelta import relativedelta
-from itertools import groupby
-from collections import defaultdict
-import logging
-
-from django.shortcuts import render, render_to_response
-from django.http import HttpResponse
-from django.core.urlresolvers import resolve
 from django.shortcuts import render
-from django.utils.html import format_html
-from django.db.models import Sum, Count, Q
-from taggit.models import Tag
+from django.http import HttpResponse
+from django.db.models import Sum, Count
 
-from accounts.models import (Account,
-                             Statement,
-                             Transaction,
+from accounts.models import (Transaction,
                              Merchant,
-                             User,
-                             TagTable,
                              MerchantTable,
                              TransactionTable,
-                             AccountTable,
-                             StatementTable,
                              )
 from accounts.helpers import get_transaction_info, get_merchant_info
 
@@ -40,7 +23,6 @@ def merchant_detail(request, *args, **kwargs):
     return render(request, 'merchant-detail.html', {'table': table,
                                                     'merchant_name': merchant.name,
                                                     'merchant_summary': merchant.get_summary()})
-
 
 
 def get_merchants_with_similar_tags(tags):
