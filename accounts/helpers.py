@@ -23,6 +23,9 @@ def get_transaction_info(tx=None):
     input tx should be a list of transactions or transaction ids
     """
 
+    if not tx:
+        return []
+
     if not hasattr(tx, '__iter__'):
         # convert single instance to list
         tx = [tx]
@@ -54,6 +57,9 @@ def get_merchant_info(merchants=None):
     """
     input merchants should be a list of merchants or merchant ids
     """
+
+    if not merchants:
+        return []
 
     if not hasattr(merchants, '__iter__'):
         # convert single instance to list
