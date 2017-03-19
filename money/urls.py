@@ -16,30 +16,30 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 import accounts.vws
-from accounts.views import transactions
+from accounts.views import transactions, merchants, statements, accts, tags
 
 urlpatterns = [
     url(r'^api/', include('api.v1.urls')),  # not sure about this
     url(r'^admin/', admin.site.urls),
     url(r'^$', accounts.vws.index, name='index'),
-    url(r'^tags$', accounts.vws.tag_list, name='tag-list'),
-    url(r'^tags/(?P<tag_id>[0-9]+)$', accounts.vws.tag_detail, name='tag-detail'),
+    url(r'^tags$', tags.tag_list, name='tag-list'),
+    url(r'^tags/(?P<tag_id>[0-9]+)$', tags.tag_detail, name='tag-detail'),
     url(r'^transactions$', transactions.transaction_list, name='transaction-list'),
-    url(r'^transactions/(?P<transaction_id>[0-9]+)$', accounts.views.transactions.transaction_detail, name='transaction-detail'),
-    url(r'^transactions/untagged$', accounts.views.transactions.transactions_untagged, name='transactions-untagged'),
+    url(r'^transactions/(?P<transaction_id>[0-9]+)$', transactions.transaction_detail, name='transaction-detail'),
+    url(r'^transactions/untagged$', transactions.transactions_untagged, name='transactions-untagged'),
     url(r'^transactions/unnamed$', transactions.transactions_unnamed, name='transactions-unnamed'),
-    url(r'^transactions/compare/(?P<tags>.*)$', accounts.views.transactions.transactions_compare, name='transactions-compare'),
-    url(r'^transactions/subdivide/(?P<tags>.*)$', accounts.views.transactions.transactions_subdivide, name='transactions-subdivide'),
-    url(r'^merchants$', accounts.vws.merchant_list, name='merchant-list'),
-    url(r'^merchants/(?P<merchant_id>[0-9]+)$', accounts.vws.merchant_detail, name='merchant-detail'),
-    url(r'^merchants/untagged$', accounts.vws.merchants_untagged, name='merchants-untagged'),
-    url(r'^merchants/unnamed$', accounts.vws.merchants_unnamed, name='merchants-unnamed'),
+    url(r'^transactions/compare/(?P<tags>.*)$', transactions.transactions_compare, name='transactions-compare'),
+    url(r'^transactions/subdivide/(?P<tags>.*)$', transactions.transactions_subdivide, name='transactions-subdivide'),
+    url(r'^merchants$', merchants.merchant_list, name='merchant-list'),
+    url(r'^merchants/(?P<merchant_id>[0-9]+)$', merchants.merchant_detail, name='merchant-detail'),
+    url(r'^merchants/untagged$', merchants.merchants_untagged, name='merchants-untagged'),
+    url(r'^merchants/unnamed$', merchants.merchants_unnamed, name='merchants-unnamed'),
     url(r'^timeseries$', accounts.vws.timeseries, name='timeseries'),
     # url(r'^trends', accounts.vws.trends, name='trends'),
-    url(r'^accounts$', accounts.vws.account_list, name='account-list'),
-    url(r'^accounts/(?P<account_id>[0-9]+)$', accounts.vws.account_detail, name='account-detail'),
-    url(r'^statements$', accounts.vws.statement_list, name='statement-list'),
-    url(r'^statements/(?P<statement_id>[0-9]+)$', accounts.vws.statement_detail, name='statement-detail'),
+    url(r'^accounts$', accts.account_list, name='account-list'),
+    url(r'^accounts/(?P<account_id>[0-9]+)$', accts.account_detail, name='account-detail'),
+    url(r'^statements$', statements.statement_list, name='statement-list'),
+    url(r'^statements/(?P<statement_id>[0-9]+)$', statements.statement_detail, name='statement-detail'),
 
 ]
 

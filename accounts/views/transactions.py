@@ -25,6 +25,8 @@ from accounts.models import (Account,
                              StatementTable,
                              )
 
+from accounts.helpers import get_transaction_info, get_merchant_info
+
 from panda.debug import debug
 
 
@@ -39,38 +41,6 @@ def transaction_list_table(request):
     # return render(request, 'datatable-basic.html', {'table': table})
     return render(request, 'datatable.html',
                   {'table': table, 'resource': 'transaction'})
-
-
-def get_transaction_info(tx=None):
-    """
-    input tx should be a list of transactions or transaction ids
-    """
-
-    if not hasattr(tx, '__iter__'):
-        # convert single instance to list
-        tx = [tx]
-
-    if isinstance(tx[0], int):
-        # get transactions from ids
-        ids = tx
-        tx = Transaction.objects.filter(id__in=ids)
-
-    rows = []
-    for t in tx:
-        row = {}
-        row['id'] = t.as_link(self_link=True)
-        if t.merchant:
-            row['merchant'] = t.merchant.as_link()
-        row['transaction_date'] = t.transaction_date
-        row['amount'] = t.debit_amount
-        row['description'] = t.description
-        row['account'] = t.account.as_link()
-        row['statement'] = t.statement.as_link()
-        row['tags'] = t.get_tags_as_links()
-
-        rows.append(row)
-
-    return rows
 
 
 def transaction_list_simple(request):
@@ -124,17 +94,11 @@ def transactions_untagged(request, sort=False):
     return render(request, 'datatable.html',
                   {'table': table, 'resource': 'transaction'})
 
+
 def transactions_unnamed(request, *args, **kwargs):
     # this doesnt make sense right?
     return ''
 
-def get_transactions_by_tag(tag, merchants=True):
-    tag_merchants = Merchant.objects.filter(tags__name__in=[tag.name])
-    merchant_ids = [m.id for m in tag_merchants]
-
-    tag_tx = Transaction.objects.filter(Q(tags__name__in=[tag.name]) | Q(merchant_id__in=merchant_ids))
-
-    return tag_tx
 
 def transactions_compare(request, tags):
     # TODO: this should render a template which hits an api for data
