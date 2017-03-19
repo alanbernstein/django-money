@@ -78,11 +78,6 @@ def transactions_untagged(request, sort=False):
                   {'table': table, 'resource': 'transaction'})
 
 
-def transactions_unnamed(request, *args, **kwargs):
-    # this doesnt make sense right?
-    return ''
-
-
 def transactions_compare(request, tags):
     # TODO: this should render a template which hits an api for data
     taglist = tags.split('+')
