@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views.generic import View
 from django.http import HttpResponse
+from django_tables2 import MultiTableMixin
+from django.views.generic.base import TemplateView
 
 from accounts.models import (Transaction,
                              MerchantTable,
@@ -18,7 +20,7 @@ from panda.debug import debug
 def transaction_list_table(request):
     all_tx = Transaction.objects.all()
     Nt = len(all_tx)
-    tx = all_tx[Nt - 30:Nt - 1]
+    tx = all_tx[Nt - 100:Nt - 1]
 
     rows = get_transaction_info(tx)
     print(rows[0])
@@ -46,16 +48,16 @@ class TransactionDetailView(View):
         tid = kwargs['transaction_id']
 
         t = Transaction.objects.get(id=tid)
-        row = get_transaction_info(t)
-        table0 = TransactionTable(row)
 
         m = t.merchant
         if m:
             tx = Transaction.objects.filter(merchant_id=m.id)
-            summary = m.get_summary()
+            merchant_summary = m.get_summary()
+            transaction_summary = t.get_summary()
         else:
             tx = []
-            summary = '(no merchant)'
+            merchant_summary = '(no merchant)'
+            transaction_summary = '(no transaction)'
         rows = get_transaction_info(tx)
         table1 = TransactionTable(rows)
 
@@ -64,8 +66,8 @@ class TransactionDetailView(View):
         table2 = MerchantTable(rows)
 
         return render(request, 'transaction-detail.html', {
-            'merchant_summary': summary,
-            'table0': table0,
+            'merchant_summary': merchant_summary,
+            'transaction_summary': transaction_summary,
             'table1': table1,
             'table2': table2,
         })
@@ -122,7 +124,7 @@ def transactions_compare(request, tags):
     taglist = tags.split('+')
     data = ''
     data += 'tags: %s' % ', '.join(taglist)
-    chart_data = get_compare_data(taglist)
+    # chart_data = get_compare_data(taglist)
     return HttpResponse(data)
 
 
@@ -131,5 +133,5 @@ def transactions_subdivide(request, tags):
     taglist = tags.split('+')
     data = ''
     data += 'tags: %s' % ', '.join(taglist)
-    chart_data = get_subdivide_data(taglist)
+    # chart_data = get_subdivide_data(taglist)
     return HttpResponse(data)
