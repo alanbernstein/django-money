@@ -1,0 +1,37 @@
+TODO: view tag breakdown, but also view subtag breakdown
+- that is, i should be able to view something like a chart of rent/bills/food/entertainment/...
+- but also, a chart of all transactions matching a single tag, split up by other tags they also have. eg:
+  - food: groceries/meal/date
+  - travel: airfare/lodging/food
+- etc
+
+IDEA: label some tags as "top-level", that is, tags in that set will never be used together
+1) bills
+2) food
+3) transportation
+IDEA: figure out this set automatically
+
+options for decent charts:
+http://chartit.shutupandship.com/
+https://www.djangopackages.com/grids/g/charts/
+
+- django-nvd3
+  - depends on python-nvd3, nvd3, bower - might be the best looking/most mature (https://pypi.python.org/pypi/django-nvd3)
+
+
+http://nvd3.org/examples/
+
+
+options for tag inputs:
+https://github.com/ludwiktrammer/django-tagging-autocomplete
+
+https://github.com/Jaza/django-taggit-autocomplete - works with taggit - no longer maintained
+
+other similar
+https://github.com/nemesisdesign/django-tagging-autocomplete-tag-it
+https://github.com/rasca/django-taggit-jquery-tag-it
+
+https://django-bootstrap-ui.readthedocs.io/en/stable/
+
+https://pypi.python.org/pypi/django-tags-input
+
