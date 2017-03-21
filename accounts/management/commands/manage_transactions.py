@@ -385,7 +385,46 @@ def get_common_suffixes(account):
     ngram2_groups = Counter(suffix_ngrams2)
     for t in ngram2_groups.most_common()[0:10]:
         print(t)
-    
+
+
+def merge_tags(keep_tag, remove_tag):
+    # TODO:
+    # electronics/" electronics"
+    # camera/photography
+    # reimbursed/reimbursement
+    # trip/vacation?
+    # second hand/thrift?
+    # sri-lanka-2009/sri-lanka
+    # travel/tavel
+    # st-louis-2009/
+    # toys/toy
+    # outdoors/outdoor
+    # books/book
+    # bike-tour-2016/bike-dallas-2016
+    tt = Tag.objects.filter(name=remove_tag)
+    if not tt:
+        print("tag '%s' not found" % remove_tag)
+        return
+
+    print('')
+    print('transactions:')
+    for nt, t in enumerate(Transaction.objects.filter(tags__name__in=[remove_tag])):
+        #t.tags.add(keep_tag)
+        #t.tags.remove(remove_tag)
+        t.save()
+        print(t.id, t)
+
+    print('')
+    print('merchants:')
+    for nm, m in enumerate(Merchant.objects.filter(tags__name__in=[remove_tag])):
+        #m.tags.add(keep_tag)
+        #m.tags.remove(remove_tag)
+        m.save()
+        print(m.id, m)
+
+    #tt[0].delete()
+
+    print("merge_tags: '%s'->'%s': %d transactions, %d merchants" % (remove_tag, keep_tag, nt, nm))
 
 
 def normalize_descriptions(account=None):
