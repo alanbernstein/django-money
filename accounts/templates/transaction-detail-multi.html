@@ -16,14 +16,12 @@
         <h2>{{ description }}</h2>
 
         {% load django_tables2 %}
-        {{ transaction_summary }}
+        {% render_table tables.0 %}
 
         <h3>merchants with similar tags</h3>
         (todo)
-        {% render_table table2 %}
+        {% render_table tables.1 %}
 
         <h3>same merchant</h3>
-        {{ merchant_summary }}
-        {% render_table table1 %}
     </body>
 </html>
