@@ -183,6 +183,16 @@ class Transaction(models.Model):
     SALE = 0
     type = models.SmallIntegerField(choices=TRANSACTION_TYPES, default=SALE)
 
+    def get_summary(self):
+        if self.merchant:
+            desc = self.merchant.name
+        elif self.description:
+            desc = self.description
+        else:
+            desc = '(no description)'
+
+        return format_html('$%.2f on %s at %s' % (self.debit_amount, self.transaction_date, desc))
+
     def get_tags(self):
         """tags are defined for both merchants and transactions.
         call this getter to see the full list"""
