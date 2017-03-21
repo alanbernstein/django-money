@@ -138,6 +138,7 @@ def get_transactions_by_tag(tag, merchants=True):
 
 def get_tag_info():
     # return Tag.objects.all()
+    # TODO: do this with django instead of loops
 
     rows = []
     tags = Tag.objects.all()

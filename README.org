@@ -60,6 +60,12 @@ looking forward...
 * todo
   - statement 463 is screwed up (2015-05) and 2015-04 (double import) is screwed up
 
+really need categories to do comparisons. how to get them?
+- define manually
+- infer from tags
+- impose a hierarchical structure on the tags
+  https://tentacles666.wordpress.com/2011/10/29/django-hierarchical-tags-with-taggit-and-tree/
+
 ** interface
 tables should be sortable
 
