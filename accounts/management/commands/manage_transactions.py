@@ -437,6 +437,7 @@ def normalize_descriptions(account=None):
 
     for t in unnormalized:
         desc_short = t.description_raw
+        desc_short = re.sub('^& ', '', desc_short)                           # chase credit garbage
         desc_short = re.sub('[0-9]{23}', ' ', desc_short)                    # chase credit, transaction ID numbers
         desc_short = re.sub('[^a-zA-Z][0-9]{5,}[^a-zA-Z]', ' ', desc_short)  # other extraneous long ID numbers
         desc_short = re.sub('#[0-9]{3,}', ' ', desc_short)                   # other id numbers starting with '#'
