@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^statements$', statements.statement_list, name='statement-list'),
     url(r'^statements/(?P<statement_id>[0-9]+)$', statements.statement_detail, name='statement-detail'),
     url(r'^compare/(?P<tags>.*)$', graphs.compare, name='graph-compare'),
+    url(r'^overview/', graphs.overview, name='graph-overview'),
     # url(r'^timeseries$', accounts.vws.timeseries, name='timeseries'),
     # url(r'^trends', accounts.vws.trends, name='trends'),
     # url(r'^transactions/compare/(?P<tags>.*)$', transactions.transactions_compare, name='transactions-compare'),
