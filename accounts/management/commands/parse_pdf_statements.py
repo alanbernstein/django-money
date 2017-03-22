@@ -58,18 +58,54 @@ class Command(BaseCommand):
 
 
 # TODO: move this stuff to a parsers folder
-
 DATE_PRINT_FORMAT = '%Y/%m/%d'
-DATE_PARSE_FORMAT = '%m/%d/%y'
-MDY_REGEX = '[0-9][0-9]/[0-9][0-9]/[0-9][0-9]'
 
 
 class PdfStatementParser(object):
     def __init__(self, statement):
         self.statement = statement
 
+    def _to_text(self):
+        cmd = 'pdftotext -layout %s -' % self.statement.get_filename()
+        self.raw_output = subprocess.check_output(cmd, shell=True)
+        self.lines = str(self.raw_output).strip().split('\n')
+
+
+class ChaseCheckingParser(PdfStatementParser):
+    DATE_PARSE_FORMAT = '???'
+    MDY_REGEX = '???'
+    SECTION_HEADERS = '()'
+
+    def parse(self):
+        self._to_text()
+        self.identify_sections()
+        self.get_statement_dates()
+        self.get_transaction_details()
+
+    def identify_sections(self):
+        # checking statements include multiple accounts
+        # figure out which lines correspond to which accounts
+        section_start_lines = []
+        for line in self.lines:
+            m1 = re.search(self.SECTION_HEADERS, line)
+            if m1:
+                pass
+
+    def get_statement_dates(self):
+        start_date, end_date, due_date = None, None, None
+        # dates_command = 'pdftotext -layout %s - | grep "%s"' % (self.statement.get_filename(), self.MDY_REGEX)
+        for line in self.lines:
+            m1 = re.search('???', line)
+
+    def get_transaction_details(self):
+        for line in self.lines:
+            pass
+
 
 class ChaseCreditParser(PdfStatementParser):
+    DATE_PARSE_FORMAT = '%m/%d/%y'
+    MDY_REGEX = '[0-9][0-9]/[0-9][0-9]/[0-9][0-9]'
+
     def parse(self):
         self.get_statement_dates()
         self.get_transaction_details()
@@ -77,24 +113,24 @@ class ChaseCreditParser(PdfStatementParser):
     def get_statement_dates(self):
         """parse start date, end date, due date"""
         start_date, end_date, due_date = None, None, None
-        dates_command = 'pdftotext -layout %s - | grep "%s"' % (self.statement.get_filename(), MDY_REGEX)
+        dates_command = 'pdftotext -layout %s - | grep "%s"' % (self.statement.get_filename(), self.MDY_REGEX)
         raw_output = subprocess.check_output(dates_command, shell=True)
         lines = str(raw_output).strip().split('\n')
 
         for line in lines:
-            m1 = re.search('Opening/Closing.*(%s) - (%s)' % (MDY_REGEX, MDY_REGEX), line)
+            m1 = re.search('Opening/Closing.*(%s) - (%s)' % (self.MDY_REGEX, self.MDY_REGEX), line)
             if m1:
-                start_date = dt.strptime(m1.groups()[0], DATE_PARSE_FORMAT)
-                end_date = dt.strptime(m1.groups()[1], DATE_PARSE_FORMAT)
+                start_date = dt.strptime(m1.groups()[0], self.DATE_PARSE_FORMAT)
+                end_date = dt.strptime(m1.groups()[1], self.DATE_PARSE_FORMAT)
             if not start_date or not end_date:
-                m1 = re.search('Statement Date.*(%s) - (%s)' % (MDY_REGEX, MDY_REGEX), line)
+                m1 = re.search('Statement Date.*(%s) - (%s)' % (self.MDY_REGEX, self.MDY_REGEX), line)
                 if m1:
-                    start_date = dt.strptime(m1.groups()[0], DATE_PARSE_FORMAT)
-                    end_date = dt.strptime(m1.groups()[1], DATE_PARSE_FORMAT)
+                    start_date = dt.strptime(m1.groups()[0], self.DATE_PARSE_FORMAT)
+                    end_date = dt.strptime(m1.groups()[1], self.DATE_PARSE_FORMAT)
 
-            m2 = re.search('Due Date.*(%s)' % MDY_REGEX, line)
+            m2 = re.search('Due Date.*(%s)' % self.MDY_REGEX, line)
             if m2:
-                due_date = dt.strptime(m2.groups()[0], DATE_PARSE_FORMAT)
+                due_date = dt.strptime(m2.groups()[0], self.DATE_PARSE_FORMAT)
 
         if not all([start_date, end_date, due_date]):
             pp(lines)
@@ -126,7 +162,7 @@ class ChaseCreditParser(PdfStatementParser):
             if self.statement.due_date.month == 1 and date_str.startswith('12'):
                 # TODO: this is failing for some reason
                 year -= 1
-            timestamp = dt.strptime('%s/%02d' % (date_str, year % 100), DATE_PARSE_FORMAT)
+            timestamp = dt.strptime('%s/%02d' % (date_str, year % 100), self.DATE_PARSE_FORMAT)
 
             desc_str = m.groups()[1].strip()
             dollars_str = m.groups()[2].strip()
@@ -145,4 +181,7 @@ class ChaseCreditParser(PdfStatementParser):
         self.statement.save()
 
 
-parser_map = {'Chase Credit': ChaseCreditParser}
+parser_map = {
+    'Chase Credit': ChaseCreditParser,
+    'Chase Checking': ChaseCheckingParser,
+}
