@@ -176,6 +176,7 @@ class Transaction(models.Model):
     description = models.CharField(max_length=300, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     tags = TaggableManager()
+    # all_tags = TaggableManager()
     # location - figure out a good way to do that
 
     # not sure if this should be an enum, or just a string...
@@ -200,6 +201,13 @@ class Transaction(models.Model):
         if self.merchant:
             tags = tags.union(self.merchant.tags.all())
         return tags
+
+    def get_tags_as_strings(self):
+        # TODO kludge until i can figure out how to use ORM properly
+        tags = set(self.tags.all())
+        if self.merchant:
+            tags = tags.union(self.merchant.tags.all())
+        return map(lambda x: x.name, tags)
 
     def get_tags_as_links(self):
         link_list = []
@@ -229,7 +237,7 @@ class Transaction(models.Model):
         else:
             amount = 0
 
-        res = '%s  $%10.2f  %s' % (self.transaction_date, amount, desc)
+        res = '%5s %s  $%10.2f  %s' % (self.id, self.transaction_date, amount, desc)
         return res
 
 
