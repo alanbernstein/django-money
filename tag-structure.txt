@@ -1,0 +1,229 @@
+"?" - too general, fix this, e.g. inspection -> car-inspection
+"*" - doesnt currently exist
+"!" - duplicate
+"@" - move to notes/merchant
+
+lisa
+books
+date
+jewelry?
+convenience
+boat?
+software
+repair
+reimbursed!
+reimbursement
+education
+tools
+lawyer
+book
+sports
+accessories?
+misc
+exercise
+parts
+
+acl-live@
+stubbs@
+laser-light-show@
+
+* root
+** bill!
+** bills
+*** insurance?
+*** internet
+*** utility
+*** phone
+** entertainment
+*** trees
+*** theme-park
+*** billiards
+*** scuba
+*** alcohol!
+*** bar
+*** drinks
+*** beer
+*** trivia
+*** games
+*** music
+*** movie
+*** festival
+*** comedy
+*** show
+*** race
+*** museum
+** food
+*** grocery
+*** groceries!
+*** meal
+**** breakfast
+**** brunch
+**** lunch
+**** snack
+**** dinner
+**** dessert
+*** food-type
+**** pizza
+**** bbq
+**** sandwich
+**** burrito
+**** japanese
+**** thai
+**** tacos
+**** fast food
+**** indian
+**** burger
+**** italian
+**** mexican
+**** greek
+**** bagel
+**** vegetarian
+**** falafel
+**** chinese
+**** mediterranean
+** transportation
+*** commute
+*** bike
+*** taxi
+*** train
+*** car-rental
+*** rideshare
+*** car
+**** oil?
+**** registration?
+**** inspection?
+**** maintenance?
+**** tire
+**** gas
+**** parking
+** tavel!
+** travel
+*** interview
+*** conference
+*** flight
+**** bag-check
+*** vacation
+*** lodging
+**** hotel
+**** camping
+** event
+*** touring?
+*** wedding
+*** smashing-pumpkins-2010
+*** neutral-milk-hotel-2013
+*** sri-lanka
+*** colorado-2017
+*** chicago-2014
+*** dc-2015
+*** chicago-2008
+*** sri-lanka-2009
+*** purdue-2009
+*** st-louis-2009
+*** new-orleans-2016
+*** chicago-2016-10
+*** state-fair-2016
+*** chicago-2012
+*** bloomington-2010
+*** iceland
+*** icealnd-2016
+*** bike-tour-2015
+*** spain-2014
+*** iceland-2016
+*** coachella-2013
+*** coachella-2014
+*** kevin-wedding-2015
+*** raj-wedding-2009
+*** raj-new-years-2010
+*** seattle-2015
+*** utah-2014
+*** portland-2009
+*** bike-dallas-2016
+*** burger-challenge-2015
+*** bbq-fest-2011
+*** bbq-fest-2012
+*** honeymoon
+*** max-wedding-2011
+*** darshan-visit-2010
+*** israel-2011
+*** acl-2013
+*** dc-2013
+*** caiman-2010
+*** chicago-2014-01
+*** chicago-2012-12
+*** chicago-2009-12
+*** portland-2013
+*** ireland-2013
+*** arkansas-2015
+*** road-trip-2015
+*** parents-visit-2009
+*** sxsw-2016
+*** dad-visit-2016
+*** bike-tour-2016
+** health
+*** pharmacy
+*** doctor
+*** therapy
+*** psych!
+*** vision
+*** contacts
+*** dental
+** home*
+*** house
+*** appliance
+*** pre-purchase
+*** apartment
+*** moving
+*** rent
+*** housewares
+*** furniture
+** hobby
+*** cloud
+*** website
+*** shop
+*** craft
+*** materials
+*** material!
+*** baking
+*** camera!
+*** photography
+*** " electronics"!
+*** electronics
+*** hardware
+*** outdoors
+*** outdoor!
+*** desktop
+*** computer
+*** toy!
+*** toys
+** self
+*** haircut
+*** clothes
+*** shoes
+** !dog
+** pet
+*** gizmo
+*** vet
+** finance
+*** llnl
+*** irunway
+*** ut-gra
+*** credit card
+*** salary
+*** investment
+*** charity
+*** donation
+*** fee
+*** payment
+*** refund
+*** tax
+** shopping
+*** web
+*** kickstarter
+*** shipping
+*** thrift
+*** second hand
+** gift
+*** shalan
+*** stina
+*** jeff
+*** dad
