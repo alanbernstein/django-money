@@ -5,6 +5,7 @@ import datetime
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.generic import ListView
+from django.views.generic.base import TemplateView
 from taggit.models import Tag
 from django.db import connection
 from django.db.models import Sum, Count
@@ -12,7 +13,38 @@ from django.db.models import Sum, Count
 from accounts.models import Transaction
 from accounts.helpers import get_tag_info, get_transactions_by_tag
 
+import plotly.plotly as py
+import plotly.graph_objs as go
+import plotly.offline as opy
+
 from panda.debug import debug
+
+
+class PlotView(TemplateView):
+    template_name = 'plot.html'
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        context = super(PlotView, self).get_context_data(**kwargs)
+
+        fig = self.get_graph()
+        div = opy.plot(fig, auto_open=False, output_type='div')
+        context['title'] = 'budget plots'
+        context['graph'] = div
+
+        return context
+
+    def get_graph(self):
+        traces = [go.Scatter(
+            x=[1, 2, 3],
+            y=[2, 5, 3],
+        )]
+        layout = {}
+
+        return go.Figure(data=traces, layout=layout)
 
 
 def overview(request, *args, **kwargs):
