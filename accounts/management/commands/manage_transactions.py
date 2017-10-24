@@ -44,6 +44,7 @@ def help():
     print('  add_tx_tags(transaction_id, tags, notes)')
     print('  get_tx(ids_or_strings)')
     print('  get_tx_context(id)')
+    print('  get_by_tags(account, taglist)')
     print('  search(string[, tags=False, merchants=False, transactions=False])')
     print("  list_tx(account, 'recent')")
     print("  list_tx(account, 'recent-amount')")
@@ -52,9 +53,11 @@ def help():
     print("  list_tx(account, 'group-total')")
     print("  assign_merchants_auto(account)")
     print("  list_tags()")
+    print("  find_unassigned_merchants()")
 
 
 def assign_interactive(account):
+    """main interactive entry point"""
     act = account
     list_transactions(account)
     help()
@@ -83,6 +86,7 @@ def add_merchant_pattern(merchant_id, pattern):
 
 
 def add_transaction_tags(transaction_ids, tags=None, notes=None):
+    """add tags and/or notes to a list of transactions"""
     if tags and not type(tags) == list:
         tags = [tags]
 
@@ -130,6 +134,7 @@ def get_tx_context(tid, context=5):
 
 
 def get_tx(qlist):
+    """get transaction(s) by id"""
     if type(qlist) != list:
         qlist = [qlist]
 
@@ -294,7 +299,7 @@ def list_transactions(account, mode='recent', N=20):
     if mode == 'recent':
         print('--\n%d recent transactions' % N)
         for t in recent:
-            print('%6d %s' % (t.id, t))
+            print(t)
 
     if mode == 'group-count':
         print('--\ntop %d description-groups by count' % N)
@@ -310,6 +315,20 @@ def list_transactions(account, mode='recent', N=20):
 
 
 list_tx = list_transactions
+
+
+def get_by_tags(account, tags):
+    """get all transactions with all the specified tags"""
+    if type(tags) == str:
+        tags = [tags]
+
+    # transactions with all the tags
+    tids = set([t.id for t in Transaction.objects.all()])
+    for tag in tags:
+        tx = Transaction.objects.filter(tags__name__in=[tag])
+        tids = tids.intersection(set([t.id for t in tx]))
+    for t in Transaction.objects.filter(id__in=tids):
+        print(t)
 
 
 def assign_merchants_auto(account, only_non_linked=True, test=False):
@@ -383,7 +402,15 @@ def get_common_suffixes(account):
     suffix_ngrams2 = [' '.join(t.description_raw.lower().split()[-2:]) for t in tx]
     ngram1_groups = Counter(suffix_ngrams1)
     ngram2_groups = Counter(suffix_ngrams2)
-    for t in ngram2_groups.most_common()[0:10]:
+    for t in ngram2_groups.most_common()[0:20]:
+        print(t)
+
+
+def find_unassigned_merchants():
+    tx = Transaction.objects.all()
+    descs = [t.description for t in tx if not t.merchant]
+    desc_groups = Counter(descs)
+    for t in desc_groups.most_common()[0:20]:
         print(t)
 
 
