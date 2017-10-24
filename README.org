@@ -60,11 +60,22 @@ looking forward...
 * todo
   - statement 463 is screwed up (2015-05) and 2015-04 (double import) is screwed up
 
+  - find most common identical descriptions that don't have associated merchants. i feel like i did this already, but dont know where...
+
+custom transaction managers:
+- Transaction.debits.all() (avoid income transactions, etc)
+- Transaction.credits.all()
+
+
+
 really need categories to do comparisons. how to get them?
 - define manually
 - infer from tags
 - impose a hierarchical structure on the tags
   https://tentacles666.wordpress.com/2011/10/29/django-hierarchical-tags-with-taggit-and-tree/
+  do in ad-hoc way using hand-defined tag structure
+
+
 
 ** interface
 tables should be sortable

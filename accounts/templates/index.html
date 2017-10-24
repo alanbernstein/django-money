@@ -1,14 +1,33 @@
-
 <html>
-<body>
-  <a href="tags">tags</a><br />
-  <a href="accounts">accounts</a><br />
-  <a href="statements">statements</a><br />
-  <a href="merchants">merchants</a> - <a href="merchants/untagged">untagged</a> - <a href="merchants/unnamed">unnamed</a><br />
-  <a href="transactions">transactions</a> - <a href="transactions/untagged">untagged</a> - <a href="transactions/unnamed">unnamed</a><br />
-  <h3>charts</h3>
-    <a href="compare">all</a><br />
-    <a href="compare/bike+car">bike vs car</a><br />
+  <head>
+    {% load static %}
+    <style type="text/css">
+      .graph-row {
+      height: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="tags">tags</a><br />
+    <a href="accounts">accounts</a><br />
+    <a href="statements">statements</a><br />
+    <a href="months">months</a><br />
+    <a href="merchants">merchants</a> - <a href="merchants/untagged">untagged</a> - <a href="merchants/unnamed">unnamed</a><br />
+    <a href="transactions">transactions</a> - <a href="transactions/untagged">untagged</a> - <a href="transactions/unnamed">unnamed</a><br />
+    <h3>charts</h3>
+    <a href="compare">all</a> - 
+    <a href="compare/bike+car">bike vs car</a> - 
     <a href="subdivide/food">food costs</a><br />
-</body>
+    
+    <div class="graph-row">
+      {% if overview_graph %}
+      {{ overview_graph|safe }}
+      {% endif %}
+    </div>    
+    <div class="graph-row">
+      {% if second_graph %}
+      {{ second_graph|safe }}
+      {% endif %}
+    </div>    
+  </body>
 </html>

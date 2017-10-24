@@ -16,7 +16,14 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from accounts.views.main import index
-from accounts.views import transactions, merchants, statements, accts, tags, graphs
+from accounts.views import (transactions,
+                            merchants,
+                            statements,
+                            accts,
+                            tags,
+                            graphs,
+                            months,
+                            )
 
 urlpatterns = [
     url(r'^api/', include('api.v1.urls')),  # not sure about this
@@ -24,6 +31,8 @@ urlpatterns = [
     url(r'^$', index, name='index'),
     url(r'^tags$', tags.tag_list, name='tag-list'),
     url(r'^tags/(?P<tag_id>[0-9]+)$', tags.tag_detail, name='tag-detail'),
+    url(r'^months$', months.month_list, name='month-list'),
+    url(r'^months/(?P<tag_id>[0-9]+)$', months.month_detail, name='month-detail'),
     url(r'^transactions$', transactions.transaction_list, name='transaction-list'),
     url(r'^transactions/(?P<transaction_id>[0-9]+)$', transactions.transaction_detail, name='transaction-detail'),
     url(r'^transactions/untagged$', transactions.transactions_untagged, name='transactions-untagged'),
@@ -37,6 +46,7 @@ urlpatterns = [
     url(r'^statements/(?P<statement_id>[0-9]+)$', statements.statement_detail, name='statement-detail'),
     url(r'^compare/(?P<tags>.*)$', graphs.compare, name='graph-compare'),
     url(r'^overview/', graphs.overview, name='graph-overview'),
+    url(r'^plots/$', graphs.PlotView.as_view(), name='plot'),
     # url(r'^timeseries$', accounts.vws.timeseries, name='timeseries'),
     # url(r'^trends', accounts.vws.trends, name='trends'),
     # url(r'^transactions/compare/(?P<tags>.*)$', transactions.transactions_compare, name='transactions-compare'),

@@ -83,7 +83,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    },
+    # 'options': {'x': ':memory:', 'check_same_thread': False}
 }
 
 

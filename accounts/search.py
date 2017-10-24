@@ -10,11 +10,15 @@ def search_transactions(s):
     return Transaction.objects.filter(description__icontains=s)
 
 
+def search_notes(s):
+    return Transaction.objects.filter(notes__icontains=s)
+
+
 def search_tags(s):
     return Tag.objects.filter(name__icontains=s)
 
 
-def print_search_results(keyword, tags=True, merchants=True, transactions=True):
+def print_search_results(keyword, tags=True, merchants=True, transactions=True, notes=True):
     first = True
 
     if tags:
@@ -56,6 +60,19 @@ def print_search_results(keyword, tags=True, merchants=True, transactions=True):
                     mid = t.merchant.id
                 print('%d. %s (%s %s) - %s' % (t.id, t.description,
                                                t.transaction_date, t.debit_amount, mid))
+
+    if notes:
+        notes_output = search_notes(keyword)
+        if notes_output:
+
+            if not first:
+                print('')
+            first = False
+
+            print('notes:')
+            for t in notes_output:
+                print('%d. %s (%s %s) - %s' % (t.id, t.description,
+                                               t.transaction_date, t.debit_amount, t.notes))
 
     if first:
         print('no results!')

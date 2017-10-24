@@ -136,6 +136,46 @@ def get_transactions_by_tag(tag, merchants=True):
     return tag_tx
 
 
+def get_nth_month(prev):
+    # prev=0 -> 1st of this month
+    # prev=1 -> 1st of last month
+    # prev=2 -> 1st of 2 months ago
+    date = datetime.datetime.now()
+    year, month = date.year, date.month
+    while prev:
+        month -= 1
+        if month == 0:
+            year -= 1
+            month = 12
+
+    return datetime.datetime(year, month, 1)
+    
+
+def get_transactions_by_month(date=None, datestr=None):
+    """
+    argument is 
+    - datetime: use that month
+    - datestr:  like '2017/10', use that month
+    """
+    # handle inputs
+    if date is None and datestr is not None:
+        date = datetime.datetime.strptime(datestr, '%Y/%m')
+
+    # compute the correct date range
+    start = datetime.datetime(date.year, date.month, 1)
+    end_year, end_month = date.year, date.month + 1
+    if end_month == 13:
+        end_year = date.year + 1
+        end_month = 1
+    end = start + datetime.timedelta(end_year, end_month)
+
+    # create queryset
+    return Transaction.objects.filter(
+        transaction_date__gte=start,
+        transaction_date__lt=end,
+    ).order_by('transaction_date')
+    
+
 def get_tag_info():
     # return Tag.objects.all()
     # TODO: do this with django instead of loops
