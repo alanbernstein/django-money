@@ -136,6 +136,59 @@ def get_transactions_by_tag(tag, merchants=True):
     return tag_tx
 
 
+def add_months(date=None, n=1):
+    # TODO test this
+    # TODO replace get_nth_month and increment_month1 with this
+    # increments the month of a datetime,
+    # or increments/decrements as many times as `n` specifies
+    # n=0 -> no effect
+    # n=1 -> next month
+    # n=-1 -> previous month
+    # n=-2 -> two months ago
+    date = date or datetime.datetime.now()
+    y = int(date.year + n/12)
+    m = (date.month - 1 + n) % 12 + 1
+    return datetime.datetime(y, m, 1)
+
+
+def get_nth_month(prev):
+    # prev=0 -> 1st of this month
+    # prev=1 -> 1st of last month
+    # prev=2 -> 1st of 2 months ago
+    date = datetime.datetime.now()
+    year, month = date.year, date.month
+    for n in range(prev):
+        month -= 1
+        if month == 0:
+            year -= 1
+            month = 12
+
+    return datetime.datetime(year, month, 1)
+
+
+def increment_month(date):
+    y, m = date.year, date.month + 1
+    if m == 13:
+        y += 1
+        m = 1
+    return datetime.datetime(y, m, 1)
+
+
+def get_transactions_by_month(date, **kwargs):
+
+    # compute the correct date range
+    start = datetime.datetime(date.year, date.month, 1)
+    end = increment_month(start)
+    # end = add_months(start, months=1) # TODO
+
+    # create queryset
+    return Transaction.objects.filter(
+        transaction_date__gte=start,
+        transaction_date__lt=end,
+        **kwargs
+    ).order_by('transaction_date')
+
+
 def get_tag_info():
     # return Tag.objects.all()
     # TODO: do this with django instead of loops
