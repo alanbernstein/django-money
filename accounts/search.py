@@ -11,7 +11,7 @@ def search_transactions(s):
 
 
 def search_notes(s):
-    return Tag.objects.filter(notes__icontains=s)
+    return Transaction.objects.filter(notes__icontains=s)
 
 
 def search_tags(s):
