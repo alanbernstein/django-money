@@ -11,14 +11,47 @@
     <script src="{% static "jquery-1.12.0.min.js" %}"></script>
     <script src="{% static "jquery.dataTables.min.js" %}"></script>
     <script type="text/javascript">
+
+     function footerCallback(row, data, start, end, display ) {
+         // https://datatables.net/examples/advanced_init/footer_callback.html
+         var api = this.api(), data;
+
+         // Total over all pages
+         total = api.column(3).data()
+                    .reduce(function(a, b) {
+                        return parseFloat(a) + parseFloat(b);
+                    }, 0);
+         count = api.column(3).data().length
+
+         // Total over this page
+         pageTotal = api.column(3, {page: 'current'}).data()
+                        .reduce(function (a, b) {
+                            return parseFloat(a) + parseFloat(b);
+                        }, 0);
+         pageCount = api.column(3, {page: 'current'}).data().length
+
+         pct = 100 * pageTotal / total
+         amount_line = '$'+pageTotal.toFixed(2) +' (' + pct.toFixed(1) + '% of $'+ total.toFixed(2) +' total)'
+
+         pct = 100 * pageCount / count
+         count_line = pageCount +' (' + pct.toFixed(1) + '% of '+ count +' total)'
+         summary = amount_line + "<br />" + count_line
+         console.log(summary)
+
+         // Update footer
+         // $(api.column(3).footer()).html(summary);
+         $("#summary").html(summary)
+     }
+
      $(document).ready(function() {
          $('#{{ resource }}table').DataTable({
              "paging": false,
+             "footerCallback": footerCallback,
              {% for k, v in datatable_kwargs.items %}
-                 "{{ k }}": {{ v|safe }},
+             "{{ k }}": {{ v|safe }},
              {% endfor %}
          });
-     } );
+     });
     </script>
     <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.css"> <!-- not sure how to get the sort arrow images to work properly without using the CDN -->
   </head>
@@ -28,6 +61,7 @@
           {{ graph|safe }}
           {% endif %}
       </div>
+      <div id="summary"></div>
 {% render_table table %}
   </body>
 </html>
