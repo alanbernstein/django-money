@@ -22,6 +22,7 @@ def get_transaction_info(tx=None):
     """
     input tx should be a list of transactions or transaction ids
     """
+    # TODO can't this be handled on the model?
 
     if not tx:
         return []
@@ -47,6 +48,7 @@ def get_transaction_info(tx=None):
         row['account'] = t.account.as_link()
         row['statement'] = t.statement.as_link()
         row['tags'] = t.get_tags_as_links()
+        row['notes'] = t.notes
 
         rows.append(row)
 

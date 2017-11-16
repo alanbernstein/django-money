@@ -278,11 +278,12 @@ class TransactionTable(tables.Table):
     description = tables.Column()
     statement = tables.Column()
     tags = tables.Column()
+    notes = tables.Column()
 
     class Meta:
         attrs = {'class': 'display', 'id': 'transactiontable'}
         orderable = False
-        sequence = ('id', 'transaction_date', 'merchant', 'amount', 'description', 'tags', 'account', 'statement')
+        sequence = ('id', 'transaction_date', 'merchant', 'amount', 'description', 'tags', 'account', 'statement', 'notes')
 
 
 class StatementTable(tables.Table):
