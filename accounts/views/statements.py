@@ -8,6 +8,7 @@ from accounts.models import (Statement,
                              StatementTable,
                              )
 from accounts.helpers import get_transaction_info, get_statement_info
+from accounts.tags import get_tag_totals, get_tag_exclusive_totals_by_size
 
 import plotly.graph_objs as go
 import plotly.offline as opy
@@ -35,15 +36,24 @@ class StatementDetailView(View):
     def get(self, request, *args, **kwargs):
             sid = kwargs['statement_id']
             s = Statement.objects.get(id=sid)
-            tx = Transaction.objects.filter(statement_id=s.id)
+            # all transactions except credit card payments
+            tx = Transaction.objects.filter(statement_id=s.id).exclude(merchant_id=152)
             rows = get_transaction_info(tx)
             table = TransactionTable(rows)
             return render(request, 'datatable.html',
-                          {'table': table, 'resource': 'transaction', 'graph': self.get_graph()})
+                          {'table': table, 'resource': 'transaction', 'graph': self.get_graph(tx)})
 
-    def get_graph(self):
-        data = [go.Bar(x=['food', 'bike'], y=[400, 300], name='stuff')]
-        layout = get_layout(title='Expenditures by tag (fake)')
+    def get_graph(self, tx):
+        # tag_amounts = get_tag_totals(tx)
+        tag_amounts = get_tag_exclusive_totals_by_size(tx)
+        tags = [t[0] for t in tag_amounts[::-1]]
+        debit_totals = [t[2] for t in tag_amounts[::-1]]
+        x_text = [x+10 for x in debit_totals]
+        data = [
+            go.Bar(y=tags, x=debit_totals, orientation='h', name='stuff'),
+            dict(y=tags, x=x_text, text=map(str, debit_totals), mode='text'),
+        ]
+        layout = get_layout(title='Expenditures by tag', xtitle='$', ytitle='Tag', showlegend=False)
         fig = go.Figure(data=data, layout=layout)
         return opy.plot(fig, **self.plot_args)
 
