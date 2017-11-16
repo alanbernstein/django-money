@@ -13,14 +13,11 @@ from accounts.helpers import get_transaction_info, get_statement_info
 def statement_detail(request, *args, **kwargs):
     sid = kwargs['statement_id']
     s = Statement.objects.get(id=sid)
-    statement_summary = format_html('$%.2f, %d transactions' % (s.get_total(), s.get_count()))
-
     tx = Transaction.objects.filter(statement_id=s.id)
     rows = get_transaction_info(tx)
     table = TransactionTable(rows)
-    return render(request, 'statement-detail.html', {'table': table,
-                                                     'statement_description': s.__str__(),
-                                                     'statement_summary': statement_summary})
+    return render(request, 'datatable.html',
+                  {'table': table, 'resource': 'transaction'})
 
 
 def statement_list_table(request, *args, **kwargs):
@@ -37,7 +34,11 @@ class StatementListView(View):
         rows = get_statement_info(statements)
         table = StatementTable(rows)
         return render(request, 'datatable.html',
-                      {'table': table, 'resource': 'statement'})
+                      {
+                          'table': table,
+                          'resource': 'statement',
+                          'datatable_kwargs': {"order": [[2, 'desc']]},
+                      })
 
 
 # statement_list = statement_list_table
