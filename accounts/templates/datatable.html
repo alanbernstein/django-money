@@ -2,7 +2,12 @@
 {% load django_tables2 %}
 <html>
   <head>
-    <title>{{ resource }}s</title>
+      <title>{{ resource }}s</title>
+      <style type="text/css">
+       .graph-row {
+           height: 50%;
+       }
+      </style>
     <script src="{% static "jquery-1.12.0.min.js" %}"></script>
     <script src="{% static "jquery.dataTables.min.js" %}"></script>
     <script type="text/javascript">
@@ -18,6 +23,11 @@
     <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.9/css/jquery.dataTables.css"> <!-- not sure how to get the sort arrow images to work properly without using the CDN -->
   </head>
   <body>
+      <div class="graph-row">
+          {% if graph %}
+          {{ graph|safe }}
+          {% endif %}
+      </div>
 {% render_table table %}
   </body>
 </html>
