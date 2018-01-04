@@ -129,6 +129,7 @@ def get_statement_info(statements=None):
     return rows
 
 
+# DEPRECATING with TransactionListView
 def get_transactions_by_tag(tag, merchants=True):
     tag_merchants = Merchant.objects.filter(tags__name__in=[tag.name])
     merchant_ids = [m.id for m in tag_merchants]
@@ -138,50 +139,61 @@ def get_transactions_by_tag(tag, merchants=True):
     return tag_tx
 
 
+def parse_start_date(ds):
+    """
+    accept:
+    2017-05-04
+    2017-05    -> 2017-05-01
+    2017       -> 2017-01-01
+    """
+    parts = map(int, ds.split('-'))
+    if len(parts) == 1:
+        return datetime.date(parts[0], 1, 1)
+    if len(parts) == 2:
+        return datetime.date(parts[0], parts[1], 1)
+    if len(parts) == 3:
+        return datetime.date(parts[0], parts[1], parts[2])
+
+
+def parse_end_date(ds):
+    """
+    accept:
+    2017-05-04
+    2017-05    -> 2017-05-30
+    2017       -> 2017-12-31
+    """
+    parts = map(int, ds.split('-'))
+    if len(parts) == 1:
+        return datetime.date(parts[0], 12, 31)
+    if len(parts) == 2:
+        # compute the end of the month.
+        # 1. get the beginning of the following month (potentially across year boundary)
+        m_start_next = datetime.datetime(int(parts[0] + parts[1]/12), parts[1] % 12 + 1, 1)
+
+        # 2. subtract one day
+        return m_start_next - datetime.timedelta(days=1)
+
+    if len(parts) == 3:
+        return datetime.date(parts[0], parts[1], parts[2])
+
+
 def add_months(date=None, n=1):
-    # TODO test this
-    # TODO replace get_nth_month and increment_month1 with this
-    # increments the month of a datetime,
-    # or increments/decrements as many times as `n` specifies
+    # increments the month of a datetime, adjusting year as necessary,
+    # leaving day unchanged.
     # n=0 -> no effect
     # n=1 -> next month
     # n=-1 -> previous month
     # n=-2 -> two months ago
+
     date = date or datetime.datetime.now()
-    y = int(date.year + n/12)
-    m = (date.month - 1 + n) % 12 + 1
-    return datetime.datetime(y, m, 1)
+    return date + relativedelta(months=n)
 
 
-def get_nth_month(prev):
-    # prev=0 -> 1st of this month
-    # prev=1 -> 1st of last month
-    # prev=2 -> 1st of 2 months ago
-    date = datetime.datetime.now()
-    year, month = date.year, date.month
-    for n in range(prev):
-        month -= 1
-        if month == 0:
-            year -= 1
-            month = 12
-
-    return datetime.datetime(year, month, 1)
-
-
-def increment_month(date):
-    y, m = date.year, date.month + 1
-    if m == 13:
-        y += 1
-        m = 1
-    return datetime.datetime(y, m, 1)
-
-
+# DEPRECATING with TransactionListView
 def get_transactions_by_month(date, **kwargs):
-
     # compute the correct date range
     start = datetime.datetime(date.year, date.month, 1)
-    end = increment_month(start)
-    # end = add_months(start, months=1) # TODO
+    end = add_months(start, n=1)
 
     # create queryset
     return Transaction.objects.filter(

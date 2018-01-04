@@ -7,7 +7,7 @@ import plotly.graph_objs as go
 import plotly.offline as opy
 
 from accounts.models import Transaction
-from accounts.helpers import get_transactions_by_month, get_nth_month
+from accounts.helpers import get_transactions_by_month, add_months
 from plot_tools import get_layout
 
 
@@ -37,13 +37,12 @@ class IndexView(TemplateView):
     def _get_transactions_by_month(self, months):
         # return a dict of {datetime: queryset}
         # where each KV pair represents a single month
-        # TODO make this a custom manager? or other Transaction method
 
-        # TODO skip incomplete latest month
         month_groups = {}
         for n in range(months):
-            date = get_nth_month(n)
-            # date = add_months(months=-n-1) # TODO
+            date = add_months(n=-n-1)  # skip incomplete latest month
+            # TODO redo this to use the same logic as in TransactionListView.get
+            # custom manager? other transaction method?
             month_groups[date] = get_transactions_by_month(date, debit_amount__gt=0)
 
         return month_groups
@@ -53,6 +52,7 @@ class IndexView(TemplateView):
         return opy.plot(fig, **kwargs)
 
     def get_overview_graph(self, months):
+        # TODO automatically determine biggest tags
         month_groups = self._get_transactions_by_month(months)
 
         # compute total spent for each month
