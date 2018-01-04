@@ -1,25 +1,30 @@
-import logging
-
 from django.shortcuts import render
-from django.http import HttpResponse
-from django.views.generic import ListView
-from taggit.models import Tag
+from django.views.generic import View
 
-from accounts.models import Merchant, TagTable
-from accounts.helpers import get_tag_info, get_transactions_by_tag
+from accounts.models import (Statement,
+                             Transaction,
+                             StatementTable,
+                             )
+from accounts.helpers import get_statement_info
 
-from panda.debug import debug
-
-
-
-def month_detail(request, *args, **kwargs):
-    resp = []
-    return HttpResponse(resp)
+import datetime
 
 
-def month_list_simple(request):
-    resp = []
-    return HttpResponse(resp)
+class MonthListView(View):
+    def get(self, request, *args, **kwargs):
+        # TODO create Month and MonthTable models
+        start = Transaction.objects.earliest('transaction_date').transaction_date
+        end = datetime.datetime.now()
+
+        statements = Statement.objects.all()
+        rows = get_statement_info(statements)
+        table = StatementTable(rows)
+        return render(request, 'datatable.html',
+                      {
+                          'table': table,
+                          'resource': 'statement',
+                          'datatable_kwargs': {"order": [[2, 'desc']]},
+                      })
 
 
-month_list = month_list_simple
+month_list = MonthListView.as_view()

@@ -127,10 +127,25 @@ class Statement(models.Model):
         return '%s/%s' % (self.file_path, self.file_name)
 
     def as_link(self, self_link=False):
-        if self_link:
-            return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.id))
+        consolidated_views = True
+        if consolidated_views:
+            # use the transactions view with a statement filter
+            href = '/transactions?statement_id=%s' % self.id
         else:
-            return format_html('<a href="/statements/%s">%s</a>' % (self.id, self.end_date))
+            # use the dedicated statements view
+            href = '/statements/%s' % self.id
+
+        if self_link:
+            # used for the statement-list view,
+            # because there should be at least onse place for user to be
+            # able to identify statements by ID
+            text = self.id
+        else:
+            # used everywhere else, because usually the end-date of the
+            # statement is enough information
+            text = self.end_date
+
+        return format_html('<a href="%s">%s</a>' % (href, text))
 
     def get_count(self, debit_only=True):
         # TODO debit only
