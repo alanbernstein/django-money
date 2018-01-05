@@ -189,20 +189,6 @@ def add_months(date=None, n=1):
     return date + relativedelta(months=n)
 
 
-# DEPRECATING with TransactionListView
-def get_transactions_by_month(date, **kwargs):
-    # compute the correct date range
-    start = datetime.datetime(date.year, date.month, 1)
-    end = add_months(start, n=1)
-
-    # create queryset
-    return Transaction.objects.filter(
-        transaction_date__gte=start,
-        transaction_date__lt=end,
-        **kwargs
-    ).order_by('transaction_date')
-
-
 def get_tag_info():
     # return Tag.objects.all()
     # TODO: do this with django instead of loops

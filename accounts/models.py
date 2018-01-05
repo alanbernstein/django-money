@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import os
-from datetime import datetime
+import datetime
 
 from django.db import models
 from django.db.models import Sum, Count, Q
@@ -168,7 +168,7 @@ class Statement(models.Model):
     def __str__(self):
         if self.end_date:
             return '%s ending %s' % (self.account.name,
-                                     datetime.strftime(self.end_date, '%Y-%m-%d'))
+                                     datetime.datetime.strftime(self.end_date, '%Y-%m-%d'))
         else:
             return '%s - unparsed' % self.file_name
 
@@ -259,8 +259,6 @@ class Transaction(models.Model):
 def filter_transactions(filter_fields, limit=None):
     # TODO: what is the appropriate way to make this a method
     #       on the Transaction model?
-    # TODO: now that this is factored out of TransactionListView,
-    #       use this everywhere possible ((IndexView._get_transactions_by_month)
     """
     get an arbitrary list of transactions, filtered in different ways,
     according to various filter parameters. several ways to do this:
@@ -299,6 +297,7 @@ def filter_transactions(filter_fields, limit=None):
     2. this stuff can be used as an API endpoint instead of a UI view, for a more dynamic page
     """
 
+    # TODO: filter out dumb stuff here: reimbursements, payments, etc
     ignore_merchant = 152
     filter_kwargs = get_filter_kwargs(filter_fields)
 
@@ -317,7 +316,7 @@ def get_filter_kwargs(kwargs):
     given all url query parameters, translate into a dict that can
     be supplied directly to django filter() call
     """
-    from accounts.helpers import add_months
+    from accounts.helpers import add_months  # TODO fix this
     filter_kwargs = {}
     if not kwargs:
         # default, limit to last 3 months

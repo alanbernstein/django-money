@@ -1,13 +1,11 @@
 import datetime
-from collections import defaultdict
 from django.shortcuts import render_to_response
 from django.views.generic import TemplateView
 
+from accounts.models import filter_transactions
+from accounts.helpers import add_months
 import plotly.graph_objs as go
 import plotly.offline as opy
-
-from accounts.models import Transaction
-from accounts.helpers import get_transactions_by_month, add_months
 from plot_tools import get_layout
 
 
@@ -41,9 +39,10 @@ class IndexView(TemplateView):
         month_groups = {}
         for n in range(months):
             date = add_months(n=-n-1)  # skip incomplete latest month
-            # TODO redo this to use the same logic as in TransactionListView.get
-            # custom manager? other transaction method?
-            month_groups[date] = get_transactions_by_month(date, debit_amount__gt=0)
+            month_groups[date] = filter_transactions({
+                'month': datetime.datetime.strftime(date, '%Y-%m'),
+                'greater': 0,
+            })
 
         return month_groups
 

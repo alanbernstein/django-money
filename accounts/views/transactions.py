@@ -18,8 +18,7 @@ from accounts.helpers import (get_transaction_info,
                               get_compare_data,
                               )
 
-from accounts.tags import get_tag_totals, get_tag_exclusive_totals_by_size
-from accounts.helpers import parse_start_date, parse_end_date, add_months
+from accounts.tags import get_tag_exclusive_totals_by_size
 
 import plotly.graph_objs as go
 import plotly.offline as opy
@@ -61,6 +60,7 @@ class TransactionListView(View):
 
     def get(self, request, *args, **kwargs):
         filter_fields = request.GET
+        # TODO probably want to use POST to send the filter_string
         tx = filter_transactions(filter_fields)
         rows = get_transaction_info(tx)
         table = TransactionTable(rows)
