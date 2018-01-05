@@ -13,6 +13,7 @@ import datetime
 class MonthListView(View):
     def get(self, request, *args, **kwargs):
         # TODO create Month and MonthTable models
+        # (right now this is just using statements...)
         start = Transaction.objects.earliest('transaction_date').transaction_date
         end = datetime.datetime.now()
 
